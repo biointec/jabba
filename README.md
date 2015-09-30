@@ -9,7 +9,7 @@ Jabba takes as input a de Bruijn graph and a set of sequences:
 >left arcs	\<in edges represented by node number of origin, separated by tabs\>  
 >right arcs	\<out edges represented by node number of target, separated by tabs\>  
 
-- the set of sequences will be corrected (e.g. PacBio reads), the corrections will be written to a file Jabba-\<input filename\>.fasta.
+- the set of sequences should be in fasta or fastq format. These sequences will be corrected (e.g. PacBio reads). The corrections will be written to a file Jabba-\<input filename\>.fasta.
 
 The output is a file with corrections of the long reads.
 
