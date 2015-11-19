@@ -3,7 +3,7 @@ Jabba: Hybrid Error Correction for Long Sequencing Reads using Maximal Exact Mat
 
 Jabba takes as input a concatenated de Bruijn graph and a set of sequences:
 - the de Bruijn graph should appear in fasta format with 1 entry per node, the meta information should be in the format:  
-> \>NODE	\<node number\>	\<size of node\>	\<number of in edges\>	\<in edges represented by node number of origin, separated by tabs\>	\<number of out edges\>	\<out edges represented by node number of target, separated by tabs\>  
+\>NODE	\<node number\>	\<size of node\>	\<number of in edges\>	\<in edges represented by node number of origin, separated by tabs\>	\<number of out edges\>	\<out edges represented by node number of target, separated by tabs\>  
 - the set of sequences should be in fasta or fastq format. These sequences will be corrected (e.g. PacBio reads). The corrections will be written to a file Jabba-\<input filename\>.fasta.
 
 The output is a file with corrections of the long reads.
