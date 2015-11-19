@@ -27,63 +27,40 @@
 #include "Seed.hpp"
 #include "mummer/sparseSA.hpp"
 #include "Input.hpp"
+#include "Graph.hpp"
 
-SeedFinder::SeedFinder(std::string const &dir, std::string const &graph_name, int min_length, int k) {
-	init(dir, graph_name, min_length, k);
+SeedFinder::SeedFinder(std::string const &dir, Graph const &graph, int min_length, int k) {
+	init(dir, graph, min_length, k);
 }
 
-void SeedFinder::init (std::string const &dir, std::string const &graph_name, int min_length, int k) {
-	graph_name_ = graph_name;
+void SeedFinder::init (std::string const &dir, Graph const &graph, int min_length, int k) {
 	min_length_ = min_length;
-	preprocessGraph(reference_);
-	sa_ = init_essaMEM(reference_, dir + "/" + Input::parseBasename(graph_name_), k);
+	reference_ = preprocessGraph(graph);
+	sa_ = init_essaMEM(reference_, "DBGraph", k);
 }
 
 SeedFinder::~SeedFinder(){
 	delete sa_;
 }
 
-void SeedFinder::preprocessGraph(std::string &reference) {
-	//file to read from
-	std::ifstream graph((graph_name_).c_str());
-	std::cout << "Seedfinder: reading graph from file \"" << graph_name_
-		<< "\"." << std::endl;
-	std::vector<std::string> nodes;
-	std::string node_number;
-	std::string node;
-	std::string in_edges;
-	std::string out_edges;
-	
+std::string SeedFinder::preprocessGraph(Graph const &graph) {
 	nodes_index_.push_back(0);
-	
+	std::cout << "Building reference... ";
 	int signed current_node = 1;
 	int total_size = 0;
-	if (graph.is_open()){
-		while (graph){
-			getline(graph, node_number);
-			if(!graph){
-				break;
-			}
-			getline(graph, node);
-			getline(graph, in_edges);
-			getline(graph, out_edges);
-			
-			reference += node + "#";
-			total_size += node.size() + 1;
-			nodes_index_.push_back(total_size);
-			
-			reference += Sequence::reverseComplement(node) + "#";
-			total_size += node.size() + 1;
-			nodes_index_.push_back(total_size);
-			
-			current_node++;
-		}
-	} else {
-		std::cerr << "Error: file is not open." << std::endl;
-		return;
+	std::string reference;
+	for (int i = 1; i < graph.get_size(); i++) {
+		std::string node = graph.getSequenceOfNode(i);
+		reference += node + "#";
+		total_size += node.size() + 1;
+		nodes_index_.push_back(total_size);
+		
+		reference += Sequence::reverseComplement(node) + "#";
+		total_size += node.size() + 1;
+		nodes_index_.push_back(total_size);
 	}
-	graph.close();
 	std::cout << "Done.";
+	return reference;
 }
 
 int SeedFinder::binary_node_search(int const &mem_start) {

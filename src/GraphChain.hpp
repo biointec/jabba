@@ -39,9 +39,10 @@ class GraphChain {
 		 *	methods
 		 */
 		//extract the neighbours from the graph file
-		std::vector<int> extractNbs(std::string arcs);
+		void extractNbs(std::string const &arcs,
+			std::vector<int> &lnbs, std::vector<int> &rnbs);
 		//read the graph file
-		void readGraph(std::string const &graph_file_name);
+		void readGraph(Input const &graph_input);
 		//process the given input file
 		void alignReads(Input const &library);
 		//process a batch of reads

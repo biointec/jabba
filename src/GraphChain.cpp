@@ -37,45 +37,40 @@
 #include "Read.hpp"
 
 
-std::vector<int> GraphChain::extractNbs(std::string arcs) {
+void GraphChain::extractNbs(std::string const &arcs, std::vector<int> &lnbs, std::vector<int> &rnbs) {
 	std::istringstream iss(arcs);
 	std::string arcs_count;
-	iss >> arcs_count; //trash first
-	iss >> arcs_count; //trash second
+	iss >> arcs_count; //>NODE
+	iss >> arcs_count; //<nodenr>
+	iss >> arcs_count; //<size>
 	iss >> arcs_count; //store number of arcs
-	std::vector<int> nbs;
 	for (int i = 0; i < std::stoi(arcs_count); ++i) {
 		std::string nb;
 		iss >> nb;
-		nbs.push_back(std::stoi(nb));
+		lnbs.push_back(std::stoi(nb));
 	}
-	return nbs;
+	iss >> arcs_count; //store number of arcs
+	for (int i = 0; i < std::stoi(arcs_count); ++i) {
+		std::string nb;
+		iss >> nb;
+		rnbs.push_back(std::stoi(nb));
+	}
 }
 
-void GraphChain::readGraph(std::string const &graph_file_name) {
-	std::ifstream graph_file(graph_file_name.c_str());
-	if (!graph_file.is_open()) {
-		std::cerr << std::endl << "Error: file " << graph_file_name
-			<< "is not open." << std::endl;
+void GraphChain::readGraph(Input const &graph_input) {
+	ReadLibrary graph(graph_input);
+	if (!graph.is_open()) {
+		std::cerr << std::endl << "Error: file " << graph_input.filename_
+			<< " is not open." << std::endl;
 		exit(1);
 	}
-	std::cout << "Reading graph from file \"" << graph_file_name
-		<< "\"." << std::endl;
-	while (graph_file) {
-		std::string node_number;
-		std::string node;
-		std::string in_arcs;
-		std::string out_arcs;
-		getline(graph_file, node_number);
-		if (!graph_file) {
-			break;
-		}
-		getline(graph_file, node);
-		getline(graph_file, in_arcs);
-		getline(graph_file, out_arcs);
-		graph_.addNode(node, extractNbs(in_arcs) , extractNbs(out_arcs));
+	while (graph.has_next()) {
+		Read read = graph.getReadBatch(1)[0];
+		std::vector<int> lnbs;
+		std::vector<int> rnbs;
+		extractNbs(read.get_meta(), lnbs, rnbs);
+		graph_.addNode(read.get_sequence(), lnbs, rnbs);
 	}
-	graph_file.close();
 }
 
 void GraphChain::alignReads() {
@@ -163,10 +158,10 @@ GraphChain::GraphChain(int argc, char * argv[]) :
 	settings_(argc, argv)
 {
 	//read graph
-	std::string graph_name = settings_.get_graph();
+	Input graph = settings_.get_graph();
 	graph_.set_k(settings_.get_dbg_k());
-	readGraph(graph_name);
-	seed_finder_.init(settings_.get_directory(), graph_name, settings_.get_min_len(), settings_.get_essa_k());
+	readGraph(graph);
+	seed_finder_.init(settings_.get_directory(), graph_, settings_.get_min_len(), settings_.get_essa_k());
 	omp_set_num_threads(settings_.get_num_threads());
 }
 

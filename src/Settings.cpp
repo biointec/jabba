@@ -30,6 +30,7 @@
 #include <thread>
 
 Settings::Settings(int argc, char** args)
+       :graph_(FASTA, "DBGraph.fasta")
 {
 	// parse program arguments
 	if (argc < 4) {
@@ -51,7 +52,6 @@ Settings::Settings(int argc, char** args)
 
 	//set standard values
 	num_threads_ = std::thread::hardware_concurrency();
-	graph_ = "DBGraph.txt";
 	essa_k_ = 1;
 	max_passes_ = 2;
 	min_len_ = 20;
@@ -73,7 +73,7 @@ Settings::Settings(int argc, char** args)
 			num_threads_ = std::stoi(args[i]);
 		} else if (arg == "-g" || arg == "--graph") {
 			++i;
-			graph_ = args[i];
+			graph_ = Input(FASTA, args[i]);
 		} else if (arg == "-k" || arg == "--dbgk") {
 			++i;
 			dbg_k_ = std::stoi(args[i]);
@@ -106,7 +106,7 @@ Settings::Settings(int argc, char** args)
 	logInstructions(argc, args);
 	//print settings
 	std::cout << "Max Number of Threads is " << num_threads_ << std::endl;
-	std::cout << "Graph is " << graph_ << std::endl;
+	std::cout << "Graph is " << graph_.basename_ << std::endl;
 	std::cout << "DBG K is " << dbg_k_ << std::endl;
 	std::cout << "ESSA K is " << essa_k_ << std::endl;
 	std::cout << "Max Passes is " << max_passes_ << std::endl;
@@ -141,7 +141,7 @@ void Settings::printUsage() const {
 	std::cout << "  -o\t--output\toutput directory [default = Jabba_output]\n";
 	std::cout << "  -fastq\t\tfastq input files\n";
 	std::cout << "  -fasta\t\tfasta input files\n";
-	std::cout << "  -g\t--graph\t\tgraph input file [default = DBGraph.txt]\n\n";
+	std::cout << "  -g\t--graph\t\tgraph input file [default = DBGraph.fasta]\n\n";
 	std::cout << " examples:\n";
 	std::cout << "  ./Jabba --dbgk 31 --graph DBGraph.txt -fastq reads.fastq\n";
 	std::cout << "  ./Jabba -o Jabba -l 20 -k 31 -p 2 -e 12 -g DBGraph.txt -fastq reads.fastq\n";

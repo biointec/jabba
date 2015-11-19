@@ -1,14 +1,9 @@
 Jabba: Hybrid Error Correction for Long Sequencing Reads using Maximal Exact Matches
 =====
 
-Jabba takes as input a de Bruijn graph and a set of sequences:
-- linear paths in the de Bruijn should be concatenated. The graph should be in the following file format. Each node spans 4 lines, containing meta data, the sequence content of the node, and the in and out edges of the node, as follows:  
-
->\<meta information\>  
->\<sequence\>  
->left	arcs	\<number of in edges\>	\<in edges represented by node number of origin, separated by tabs\>  
->right	arcs	\<number of out edges\>	\<out edges represented by node number of target, separated by tabs\>  
-
+Jabba takes as input a concatenated de Bruijn graph and a set of sequences:
+- the de Bruijn graph should appear in fasta format with 1 entry per node, the meta information should be in the form:
+>\>NODE	\<node number\>	\<size of node\>	\<number of in edges\>	\<in edges represented by node number of origin, separated by tabs\>	\<number of out edges\>	\<out edges represented by node number of target, separated by tabs\>  
 - the set of sequences should be in fasta or fastq format. These sequences will be corrected (e.g. PacBio reads). The corrections will be written to a file Jabba-\<input filename\>.fasta.
 
 The output is a file with corrections of the long reads.
@@ -16,16 +11,16 @@ The output is a file with corrections of the long reads.
 
 de Bruijn graph
 ===============
-To build a de Bruijn graph from sequencing reads, one can use [brownie](https://github.com/jfostier/brownie), or any other tool.
+To build a de Bruijn graph from sequencing reads, one can use [brownie](https://github.com/jfostier/brownie), or any other suitable tool. Errors in the de Bruijn graph have to be corrected and linear paths concatenated. Correction can be achieved either by using corrected second generation data to build the graph or by directly correcting the graph.
 
 brownie will concatenate linear nodes and can output the graph in the desired graph format.  
 To build a graph with brownie from a fastq file short_reads.fastq containing short reads:  
->./brownie brownie_data 31 -short -fastq short_reads.fastq --graph  
+>./brownie -p brownie_data -k 31 -g \<genome_size\> -fastq short_reads.fastq --graph  
 
 To build a graph with brownie from a fasta file genome.fasta containing a reference genome (in this case the graph is not corrected):  
->./brownie brownie_data 31 -short -fasta genome.fastq --perfectgraph  
+>./brownie brownie_data -k 31 -fasta genome.fasta --perfectgraph  
 
-In both cases the graph file DBGraph.txt will be put in the current directory.
+In both cases the graph file DBGraph.fasta will be produced.
 
 Installation
 ============

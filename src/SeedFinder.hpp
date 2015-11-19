@@ -27,10 +27,10 @@
 class sparseSA;
 class Seed;
 class SeedFinder;
+class Graph;
 
 class SeedFinder{
 	private:
-		std::string graph_name_; //filename of the graph
 		int min_length_; //min length of seeds
 		sparseSA * sa_; //suffix array
 		std::string reference_; //sparseSA requires the sequence from
@@ -40,9 +40,9 @@ class SeedFinder{
 		/*
 		 *	ctors
 		 */
-		SeedFinder() {};
-		SeedFinder(std::string const &dir, std::string const &graph_name, int min_length, int k);
-		void init(std::string const &dir, std::string const &graph_name, int min_length, int k);
+		SeedFinder(){};
+		SeedFinder(std::string const &dir, Graph const &graph, int min_length, int k);
+		void init(std::string const &dir, Graph const &graph, int min_length, int k);
 		/*
 		 *	dtors
 		 */
@@ -51,7 +51,7 @@ class SeedFinder{
 		 *	methods
 		 */
 		//concatenate nodes and their reverse complements
-		void preprocessGraph(std::string &reference);
+		std::string preprocessGraph(Graph const &graph);
 		//initialise the ESSA
 		sparseSA * init_essaMEM(std::string &ref,
 			std::string const &meta, int k);

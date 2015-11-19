@@ -36,7 +36,7 @@ class Settings {
 private:
 	int num_threads_; //maximal number of threads
 	std::string directory_; //output directory
-	std::string graph_; //graph location
+	Input graph_; //graph file
 	int dbg_k_; //de Bruijn graph k-mer size
 	int essa_k_; //ESSA sparseness parameter
 	int max_passes_; //maximal number of passes
@@ -62,7 +62,7 @@ public:
 	//gettres
 	int get_num_threads() const {return num_threads_;}
 	std::string get_directory() const {return directory_;}
-	std::string get_graph() const {return graph_;}
+	Input get_graph() const {return graph_;}
 	int get_dbg_k() const {return dbg_k_;}
 	int get_essa_k() const {return essa_k_;}
 	int get_max_passes() const {return max_passes_;}
