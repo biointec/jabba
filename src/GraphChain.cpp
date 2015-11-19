@@ -164,7 +164,7 @@ GraphChain::GraphChain(int argc, char * argv[]) :
 {
 	//read graph
 	std::string graph_name = settings_.get_graph();
-	graph_.set_k(settings_.get_dbg_k() - 1);
+	graph_.set_k(settings_.get_dbg_k());
 	readGraph(graph_name);
 	seed_finder_.init(settings_.get_directory(), graph_name, settings_.get_min_len(), settings_.get_essa_k());
 	omp_set_num_threads(settings_.get_num_threads());

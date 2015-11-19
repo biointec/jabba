@@ -26,7 +26,6 @@
 #include "Sequence.hpp"
 #include "Seed.hpp"
 #include "mummer/sparseSA.hpp"
-#include "mummer/fasta.hpp"
 #include "Input.hpp"
 
 SeedFinder::SeedFinder(std::string const &dir, std::string const &graph_name, int min_length, int k) {
@@ -157,16 +156,19 @@ sparseSA * SeedFinder::init_essaMEM(std::string &ref, std::string const &meta,
 	bool suflink = true;
 	bool child = false;
 	sparseSA * sa;
-	sa = new sparseSA(ref,		//reference
-		refdescr,		//
-		startpos,		//
-		false,			//to use or not to use 4 column format
-		k,			//sparseness
-		suflink,		//suffixlinks
-		child,			//child arrays
-		sparseMult,		//skip parameter
-		printSubstring,		//
-		printRevCompForw	//
+	sa = new sparseSA(ref,
+		refdescr,
+		startpos,
+		false,
+		k,
+		suflink,
+		child,
+		false,
+		sparseMult,
+		0,
+		printSubstring,
+		printRevCompForw,
+		false
 	);
 	sa->construct();
 	

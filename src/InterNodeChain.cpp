@@ -49,7 +49,7 @@ InterNodeChain::InterNodeChain(Read const &read, Graph const &graph,
 	seeds_of_size_.clear();
 	map_keys_.clear();
 	seed_map_.clear();
-	seed_finder.getSeeds(read.get_sequence(), seed_map_, seeds_of_size_,
+	seed_finder.getSeeds(read_.get_sequence(), seed_map_, seeds_of_size_,
 		map_keys_, seed_count, seed_min_len);
 }
 
@@ -59,7 +59,7 @@ void InterNodeChain::printSeeds() {
 	for (int j = 0; j < map_keys_.size(); ++j) {
 		for (int k = 0; k < seed_map_[map_keys_[j]].size(); ++k) {
 			Seed s = seed_map_[map_keys_[j]][k];
-			std::cout << s.to_string() << std::endl;
+			std::cerr << s.to_string() << std::endl;
 		}
 	}
 }
@@ -337,7 +337,11 @@ std::vector<LocalAlignment> InterNodeChain::correctRead(
 		graph_.extendPath(post_path, 0, 1000000, false);
 		std::string post_path_seq = graph_.concatenateNodes(post_path);
 		int post_path_start = is.get_node_end();
-		post_path_seq = post_path_seq.substr(post_path_start);
+		if (post_path_start < post_path_seq.size()) {
+			post_path_seq = post_path_seq.substr(post_path_start);
+		} else {
+			post_path_seq = "";
+		}
 		if (read_.size() - is.get_read_end() >= post_path_seq.size()) {
 			std::string r = read_.get_sequence().substr(is.get_read_end());
 			al.set_read_end(alignCorrectedToRead(pre_path_seq, r).second);

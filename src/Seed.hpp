@@ -49,13 +49,13 @@ class Seed{
 		//string representation, for debugging purposes
 		std::string to_string() {
 			std::string result = "";
-			result += get_node();;
+			result += std::to_string(get_node());
 			result += " ";
-			result += get_ref_start();
+			result += std::to_string(get_ref_start());
 			result += " ";
-			result += get_read_start();
+			result += std::to_string(get_read_start());
 			result += " ";
-			result += get_length();
+			result += std::to_string(get_length());
 			result += " ";
 			return result;
 		}

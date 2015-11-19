@@ -6,9 +6,37 @@
 #include <iostream>
 #include <algorithm>
 #include <limits>
+#include <limits.h>
 
 
 using namespace std;
+
+static const unsigned int BITADD[256] = { UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//0-9
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//10-19
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//20-29
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//30-39
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//40-49
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//50-59
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, 0,        UINT_MAX, 1,        UINT_MAX, UINT_MAX,//60-69 65:A, 67:C
+                                         UINT_MAX, 2,        UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//70-79 71:G
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, 3,        UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//80-89 84:T
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, 0,        UINT_MAX, 1,       //90-99 97:a, 99: c
+                                         UINT_MAX, UINT_MAX, UINT_MAX, 2,        UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//100-109 103:g
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, 3,        UINT_MAX, UINT_MAX, UINT_MAX,//110-119 116:t
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//120-129
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//130-139
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//140-149
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//150-159
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//160-169
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//170-179
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//180-189
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//190-199
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//200-209
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//210-219
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//220-229
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//230-239
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX,//240-249
+                                         UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX };//250-255
 
 // Stores the LCP array in an unsigned char (0-255).  Values larger
 // than or equal to 255 are stored in a sorted array.
@@ -41,7 +69,7 @@ struct vec_uchar {
   }
   // Once all the values are set, call init. This will assure the
   // values >= 255 are sorted by index for fast retrieval.
-  void init() { sort(M.begin(), M.end()); cerr << "M.size()=" << M.size() << endl; std::vector<item_t>(M).swap(M); }
+  void init() { sort(M.begin(), M.end()); cerr << "M.size()=" << M.size() << endl; std::vector<item_t>(M).swap(M);}
   
   long index_size_in_bytes(){
       long indexSize = 0L;
@@ -58,6 +86,13 @@ struct match_t {
   long ref; // position in reference sequence
   long query; // position in query
   long len; // length of match
+};
+
+struct saTuple_t {
+    saTuple_t(): left(0), right(0) {}
+    saTuple_t(unsigned int l, unsigned int r): left(l), right(r){}
+    unsigned int left;
+    unsigned int right;
 };
 
 // depth : [start...end] 
@@ -83,18 +118,24 @@ struct sparseSA {
   vector<int> ISA;  // Inverse suffix array.
   vec_uchar LCP; // Simulates a vector<int> LCP.
   vector<int> CHILD; //child table
+  vector<saTuple_t> KMR;
 
   long K; // suffix sampling, K = 1 every suffix, K = 2 every other suffix, K = 3, every 3rd sffix
   bool hasChild;
   bool hasSufLink;
+  //fields for lookup table of sa intervals to a certain small depth
+  bool hasKmer;
+  long kMerSize;
+  long kMerTableSize;
   int sparseMult;
   bool printSubstring;
   bool printRevCompForw;
-  bool forward_;
+  bool forward;
+  bool nucleotidesOnly;
   
   long index_size_in_bytes(){
       long indexSize = 0L;
-      indexSize += sizeof(forward_);
+      indexSize += sizeof(forward);
       indexSize += sizeof(printRevCompForw);
       indexSize += sizeof(printSubstring);
       indexSize += sizeof(sparseMult);
@@ -107,6 +148,10 @@ struct sparseSA {
       indexSize += sizeof(_4column);
       indexSize += sizeof(maxdescrlen);
       indexSize += sizeof(descr);
+      indexSize += sizeof(hasKmer);
+      indexSize += sizeof(kMerSize);
+      indexSize += sizeof(kMerTableSize);
+      indexSize += sizeof(nucleotidesOnly);
       for(int i = 0; i < descr.size(); i++){
           indexSize += descr[i].capacity();
       }
@@ -115,6 +160,7 @@ struct sparseSA {
       indexSize += sizeof(SA) + SA.capacity()*sizeof(unsigned int);
       indexSize += sizeof(ISA) + ISA.capacity()*sizeof(int);
       indexSize += sizeof(CHILD) + CHILD.capacity()*sizeof(int);
+      indexSize += sizeof(KMR) + KMR.capacity()*(2*sizeof(unsigned int));
       indexSize += LCP.index_size_in_bytes();
       return indexSize;
   }
@@ -131,12 +177,14 @@ struct sparseSA {
 
   // Constructor builds sparse suffix array. 
   sparseSA(string &S_, vector<string> &descr_, vector<long> &startpos_, bool __4column, 
-  long K_, bool suflink_, bool child_, int sparseMult_, bool printSubstring_, bool printRevCompForw_);
+  long K_, bool suflink_, bool child_, bool kmer_, int sparseMult_, int kMerSize_, bool printSubstring_, bool printRevCompForw_, bool nucleotidesOnly_);
 
   // Modified Kasai et all for LCP computation.
   void computeLCP();
   //Modified Abouelhoda et all for CHILD Computation.
   void computeChild();
+  //build look-up table for sa intervals of kmers up to some depth
+  void computeKmer();
 
   // Radix sort required to construct transformed text for sparse SA construction.
   void radixStep(int *t_new, int *SA, long &bucketNr, long *BucketBegin, long l, long r, long h);
@@ -206,19 +254,19 @@ struct sparseSA {
   // et. al. Note this is a "one-sided" query. It "streams" the query
   // P throught he index.  Consequently, repeats can occur in the
   // pattern P.
-  void MAM(string &P, vector<match_t> &matches, int min_len, long& memCount, bool forward__, bool print) { 
-    forward_ = forward__;
+  void MAM(string &P, vector<match_t> &matches, int min_len, long& memCount, bool forward_, bool print) { 
+    forward = forward_;
     if(K != 1) return;  // Only valid for full suffix array.
     findMAM(P, matches, min_len, memCount, print);  
   }
 
   // Find Maximal Exact Matches (MEMs) 
-  void MEM(string &P, vector<match_t> &matches, int min_len, bool print, long& memCount, bool forward__, int num_threads = 1);
+  void MEM(string &P, vector<match_t> &matches, int min_len, bool print, long& memCount, bool forward_, int num_threads = 1);
 
   // Maximal Unique Match (MUM) 
-  void MUM(string &P, vector<match_t> &unique, int min_len, long& memCount, bool forward__, bool print);  
+  void MUM(string &P, vector<match_t> &unique, int min_len, long& memCount, bool forward_, bool print);  
   
-    //save index to files
+  //save index to files
   void save(const string &prefix);
   
   //load index from file
