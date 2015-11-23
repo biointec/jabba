@@ -78,8 +78,7 @@ void ReadLibrary::open(Input const &library) {
 
 
 
-std::vector<Read> ReadLibrary::getReadBatch(int const &batch_size){
-	std::vector<Read> batch;
+void ReadLibrary::getReadBatch(std::vector<Read> &batch, int const &batch_size){
 	for(int i = 0; i < batch_size && library_; ++i){
 		std::string meta;
 		std::string seq;
@@ -88,5 +87,4 @@ std::vector<Read> ReadLibrary::getReadBatch(int const &batch_size){
 		Read read(meta, seq);
 		batch.push_back(read);
 	}
-	return batch;
 }

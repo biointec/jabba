@@ -41,6 +41,6 @@ class ReadLibrary{
 		bool is_open() {return library_.is_open();}
 		bool has_next() {return library_;}
 		void close() {library_.close();}
-		std::vector<Read> getReadBatch(int const &batch_size);
+		void getReadBatch(std::vector<Read> &batch, int const &batch_size);
 };
 #endif

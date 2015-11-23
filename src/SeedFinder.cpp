@@ -23,17 +23,16 @@
 #include <iostream>
 #include <fstream>
 
-#include "Sequence.hpp"
 #include "Seed.hpp"
 #include "mummer/sparseSA.hpp"
 #include "Input.hpp"
 #include "Graph.hpp"
 
-SeedFinder::SeedFinder(std::string const &dir, Graph const &graph, int min_length, int k) {
-	init(dir, graph, min_length, k);
+SeedFinder::SeedFinder(Graph const &graph, int min_length, int k) {
+	init(graph, min_length, k);
 }
 
-void SeedFinder::init (std::string const &dir, Graph const &graph, int min_length, int k) {
+void SeedFinder::init (Graph const &graph, int min_length, int k) {
 	min_length_ = min_length;
 	reference_ = preprocessGraph(graph);
 	sa_ = init_essaMEM(reference_, "DBGraph", k);
@@ -46,17 +45,16 @@ SeedFinder::~SeedFinder(){
 std::string SeedFinder::preprocessGraph(Graph const &graph) {
 	nodes_index_.push_back(0);
 	std::cout << "Building reference... ";
-	int signed current_node = 1;
 	int total_size = 0;
 	std::string reference;
 	for (int i = 1; i < graph.get_size(); i++) {
-		std::string node = graph.getSequenceOfNode(i);
-		reference += node + "#";
-		total_size += node.size() + 1;
+		TNode tnode = graph.get_node(i);
+		reference += tnode.get_sequence() + "#";
+		total_size += tnode.size() + 1;
 		nodes_index_.push_back(total_size);
 		
-		reference += Sequence::reverseComplement(node) + "#";
-		total_size += node.size() + 1;
+		reference += tnode.get_rc_sequence() + "#";
+		total_size += tnode.size() + 1;
 		nodes_index_.push_back(total_size);
 	}
 	std::cout << "Done.";

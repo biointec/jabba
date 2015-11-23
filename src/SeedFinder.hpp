@@ -41,8 +41,8 @@ class SeedFinder{
 		 *	ctors
 		 */
 		SeedFinder(){};
-		SeedFinder(std::string const &dir, Graph const &graph, int min_length, int k);
-		void init(std::string const &dir, Graph const &graph, int min_length, int k);
+		SeedFinder(Graph const &graph, int min_length, int k);
+		void init(Graph const &graph, int min_length, int k);
 		/*
 		 *	dtors
 		 */

@@ -20,27 +20,26 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
-#include <vector>
-
-#include "Node.hpp"
+#include "TNode.hpp"
 
 class Graph{
 	private:
 		int size_; //number of nodes
 		int k_; //size of k-mers, overlap between nodes is k-1
-		std::vector<Node> nodes_; //list of nodes
+		std::vector<TNode> nodes_; //list of nodes
 	public:
 		/*
 		 *	ctors
 		 */
 		Graph() : size_(0), k_(0) {
-			Node empty_node("", -1);
+			TNode empty_node("", -1);
 			nodes_.push_back(empty_node);
 		}
 		/*
 		 *	methods
 		 */
 		//getters
+		TNode get_node(int id) const {if (id > 0) {return nodes_[id];} else {return nodes_[-id];}}
 		int get_size() const {return nodes_.size();}
 		int get_overlap() const {return k_ - 1;}
 		int get_k() const {return k_;}

@@ -19,20 +19,12 @@
  *******************************************************************************/
 #include "GraphChain.hpp"
 
-#include <iostream>
 #include <sstream>
-#include <fstream>
-#include <map>
 #include <omp.h> //openmp
-#include <algorithm>
-#include <iterator>
-#include <iomanip>
-#include <climits>
 
+#include "Settings.hpp"
 #include "Seed.hpp"
 #include "InterNodeChain.hpp"
-#include "Graph.hpp"
-#include "ssw/ssw_cpp.h"
 #include "AlignedRead.hpp"
 #include "Read.hpp"
 
@@ -65,7 +57,9 @@ void GraphChain::readGraph(Input const &graph_input) {
 		exit(1);
 	}
 	while (graph.has_next()) {
-		Read read = graph.getReadBatch(1)[0];
+		std::vector<Read> nodes;
+		graph.getReadBatch(nodes, 1);
+		Read read = nodes[0];
 		std::vector<int> lnbs;
 		std::vector<int> rnbs;
 		extractNbs(read.get_meta(), lnbs, rnbs);
@@ -110,7 +104,8 @@ void GraphChain::alignReads(Input const &library) {
 		batch_nr++;
 		int batch_size = 1024;
 		std::cout << "Reading batch " << batch_nr << std::endl;
-		std::vector<Read> reads = read_library.getReadBatch(batch_size);
+		std::vector<Read> reads;
+		read_library.getReadBatch(reads, batch_size);
 		std::vector<std::string> corrected_reads = processBatch(reads,
 			read_count);
 		batch_size = reads.size();
@@ -161,7 +156,7 @@ GraphChain::GraphChain(int argc, char * argv[]) :
 	Input graph = settings_.get_graph();
 	graph_.set_k(settings_.get_dbg_k());
 	readGraph(graph);
-	seed_finder_.init(settings_.get_directory(), graph_, settings_.get_min_len(), settings_.get_essa_k());
+	seed_finder_.init(graph_, settings_.get_min_len(), settings_.get_essa_k());
 	omp_set_num_threads(settings_.get_num_threads());
 }
 

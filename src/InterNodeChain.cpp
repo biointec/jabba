@@ -19,16 +19,11 @@
  *******************************************************************************/
 #include "InterNodeChain.hpp"
 
-#include <algorithm>
-#include <iostream>
-
 #include "ssw/ssw_cpp.h"
 #include "Graph.hpp"
 #include "SeedFinder.hpp"
 #include "IntraNodeChain.hpp"
-#include "Seed.hpp"
 #include "Read.hpp"
-#include "LocalAlignment.hpp"
 #include "Settings.hpp"
 #include "AlignedRead.hpp"
 

@@ -21,7 +21,6 @@
 #define ALIGNEDREAD_HPP
 
 
-#include <vector>
 #include <string>
 
 #include "LocalAlignment.hpp"

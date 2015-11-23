@@ -19,20 +19,11 @@
  *******************************************************************************/
 #include "IntraNodeChain.hpp"
 
-#include <iostream>
 #include <sstream>
-#include <fstream>
 #include <map>
-#include <omp.h> //openmp
 #include <algorithm>
-#include <iterator>
-#include <iomanip>
-#include <climits>
 
-#include "Seed.hpp"
-#include "Read.hpp"
 #include "Settings.hpp"
-#include "InexactSeed.hpp"
 
 IntraNodeChain::IntraNodeChain(std::vector<Seed> &seeds,
 	Settings const &settings)

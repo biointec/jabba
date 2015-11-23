@@ -20,10 +20,6 @@
 #ifndef GRAPHCHAIN_HPP
 #define GRAPHCHAIN_HPP
 
-#include <fstream>
-#include <vector>
-#include <string>
-
 #include "Settings.hpp"
 #include "ReadLibrary.hpp"
 #include "SeedFinder.hpp"

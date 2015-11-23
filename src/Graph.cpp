@@ -19,8 +19,6 @@
  *******************************************************************************/
 #include "Graph.hpp"
 
-#include <algorithm> //reverse
-#include <iostream>
 #include <deque>
 #include <map>
 #include <omp.h>
@@ -28,7 +26,7 @@
 void Graph::addNode(std::string const &sequence, std::vector<int> const &in_edges, 
 	std::vector<int> const &out_edges)
 {
-	Node new_node(sequence, nodes_.size(), in_edges, out_edges);
+	TNode new_node(sequence, nodes_.size(), in_edges, out_edges);
 	nodes_.push_back(new_node);
 }
 

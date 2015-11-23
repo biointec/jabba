@@ -21,7 +21,6 @@
 #define INTRANODECHAIN_HPP
 
 #include <string>
-#include <vector>
 
 #include "InexactSeed.hpp"
 

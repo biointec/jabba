@@ -20,7 +20,6 @@
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
 
-#include <string>
 #include <vector>
 
 #include "Input.hpp"
