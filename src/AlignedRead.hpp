@@ -24,20 +24,23 @@
 #include <string>
 
 #include "LocalAlignment.hpp"
+#include "Settings.hpp"
 
 class Read;
 class Graph;
+
 
 struct AlignedRead {
 
 	Read &read_; //reference to the read
 	std::vector<LocalAlignment> local_alignments_; //list of alignments
+	OutputMode output_mode_;
 
 public:
 	/*
 	 *	ctors
 	 */
-	AlignedRead(Read &read);
+	AlignedRead(Read &read, OutputMode output_mode);
 	/*
 	 *	methods
 	 */

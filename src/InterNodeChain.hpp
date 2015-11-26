@@ -23,6 +23,8 @@
 #include <vector>
 #include <map>
 
+#include "Alignment.hpp"
+
 class AlignedRead;
 class Seed;
 class Graph;
@@ -41,6 +43,7 @@ class InterNodeChain{
 		std::vector<int> map_keys_; //list of all nodes that have seeds
 		std::vector<int> seeds_of_size_; //number of seeds with a given length
 		int max_passes_; //max number of passes of the algorithm
+		Alignment &alignment_;
 		/*
 		 *	methods
 		 */
@@ -89,10 +92,10 @@ class InterNodeChain{
 		//align a possible correction to the read
 		//returns the segment of the read that aligns
 		std::pair<int, int> alignCorrectedToRead(std::string &corrected,
-			std::string const &read) const;
+			std::string &read);
 		//correct the read segment
 		std::vector<LocalAlignment> correctRead(
-			std::vector<InexactSeed> inexact_seeds) const;
+			std::vector<InexactSeed> inexact_seeds);
 		//chain the paths
 		void chainPaths(AlignedRead &ar) const;
 		//perform final chaining step by looking for paths in the graph
@@ -106,7 +109,7 @@ class InterNodeChain{
 		 */
 		InterNodeChain(Read const &read, Graph const &graph,
 			Settings const &settings_,
-			SeedFinder &seed_finder);
+			SeedFinder &seed_finder, Alignment &alignment);
 		/*
 		 *	methods
 		 */

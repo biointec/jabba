@@ -1,1 +1,1 @@
-add_executable(Jabba GraphChain.cpp IntraNodeChain.cpp InterNodeChain.cpp Graph.cpp ReadLibrary.cpp SeedFinder.cpp AlignedRead.cpp Settings.cpp Nucleotide.cpp TString.cpp ssw/ssw_cpp.cpp ssw/ssw.c mummer/qsufsort.c mummer/sparseSA.cpp)
+add_executable(Jabba GraphChain.cpp IntraNodeChain.cpp InterNodeChain.cpp Graph.cpp ReadLibrary.cpp SeedFinder.cpp AlignedRead.cpp Settings.cpp Nucleotide.cpp TString.cpp Alignment.cpp mummer/qsufsort.c mummer/sparseSA.cpp)

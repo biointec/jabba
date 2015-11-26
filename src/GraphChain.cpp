@@ -50,6 +50,7 @@ void GraphChain::extractNbs(std::string const &arcs, std::vector<int> &lnbs, std
 }
 
 void GraphChain::readGraph(Input const &graph_input) {
+	std::cout << "Reading the graph... " << std::endl;
 	ReadLibrary graph(graph_input);
 	if (!graph.is_open()) {
 		std::cerr << std::endl << "Error: file " << graph_input.filename_
@@ -65,6 +66,7 @@ void GraphChain::readGraph(Input const &graph_input) {
 		extractNbs(read.get_meta(), lnbs, rnbs);
 		graph_.addNode(read.get_sequence(), lnbs, rnbs);
 	}
+	std::cout << "Done." << std::endl;
 }
 
 void GraphChain::alignReads() {
@@ -79,22 +81,29 @@ void GraphChain::alignReads(Input const &library) {
 	ReadLibrary read_library(library);
 	std::string of_name = settings_.get_directory() + "/Jabba-"
 		+ library.basename_;
+	std::string ucf_name = settings_.get_directory() + "/Jabba_uncorrected-"
+		+ library.basename_;
 	int lastindex = of_name.find_last_of(".");
 	if (lastindex != std::string::npos) {
 		of_name = of_name.substr(0, lastindex) + ".fasta";
 	} else {
 		of_name = of_name + ".fasta";
 	}
-	read_output_file_.open(of_name.c_str());
+	std::ofstream read_output_file;
+	read_output_file.open(of_name.c_str());
+	std::ofstream read_uncorrected_file;
+	read_uncorrected_file.open(ucf_name.c_str());
 	if (!read_library.is_open()) {
 		std::cerr << std::endl << "Error: file " << library.filename_
 			<< " is not open." << std::endl;
 		exit(1);
 	}
-	if (!read_output_file_.is_open()) {
-		std::cerr << std::endl << "Error: file "
-			<< settings_.get_directory() << "/Jabba-"
-			<< library.basename_ << " is not open." << std::endl;
+	if (!read_output_file.is_open()) {
+		std::cerr << std::endl << "Error: file " << of_name << " is not open." << std::endl;
+		exit(1);
+	}
+	if (!read_uncorrected_file.is_open()) {
+		std::cerr << std::endl << "Error: file " << ucf_name << " is not open." << std::endl;
 		exit(1);
 	}
 	//reads some reads from file and then processes them
@@ -110,12 +119,18 @@ void GraphChain::alignReads(Input const &library) {
 			read_count);
 		batch_size = reads.size();
 		for (int i = 0; i < batch_size; ++i) {
-			read_output_file_ << ">" << reads[i].get_meta() << std::endl
+			if (corrected_reads[i].size() > 1000) {
+				read_output_file << ">" << reads[i].get_meta() << std::endl
 				<< corrected_reads[i] << std::endl;
+			} else {
+				read_uncorrected_file << ">" << reads[i].get_meta() << std::endl
+				<< reads[i].get_sequence() << std::endl;
+			}
 		}
 		read_count += batch_size;
 	}
-	read_output_file_.close();
+	read_uncorrected_file.close();
+	read_output_file.close();
 }
 
 std::vector<std::string> GraphChain::processBatch(
@@ -141,8 +156,11 @@ std::vector<std::string> GraphChain::processBatch(
 		for (int i = 0; i < reads_per_thread; ++i) {
 			Read read = reads[local_read_count + i];
 			read.set_id(read_count + local_read_count + i);
-			InterNodeChain iernc(read, graph_, settings_, seed_finder_);
-			AlignedRead ar(read);
+			std::cout << "Processing read " << read.get_id() << std::endl;
+			std::cerr << "Processing read " << read.get_id() << std::endl;
+			Alignment alignment(250, 30, 1, -4, -2, -3);
+			InterNodeChain iernc(read, graph_, settings_, seed_finder_, alignment);
+			AlignedRead ar(read, settings_.get_output_mode());
 			corrected_reads[read.get_id() - read_count] = iernc.chainSeeds(ar);
 		}
 	}

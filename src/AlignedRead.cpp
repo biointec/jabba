@@ -25,7 +25,10 @@
 #include "Read.hpp"
 #include "Graph.hpp"
 
-AlignedRead::AlignedRead(Read &read) : read_(read) {}
+AlignedRead::AlignedRead(Read &read, OutputMode output_mode)
+      :	read_(read),
+	output_mode_(output_mode)
+{}
 
 std::vector<std::pair<int, int>> AlignedRead::not_corrected() {
 	sort();
@@ -101,6 +104,16 @@ bool AlignedRead::merge() {
 			if (fit(index, lai, laj)) {
 				lai.insert(lai.end(), index + 1, laj.end());
 				local_alignments_[i].set_path(lai);
+				int read_start = local_alignments_[i].get_read_start();
+				int read_end = local_alignments_[j].get_read_end();
+				int ref_start = local_alignments_[i].get_ref_start();
+				int ref_size = read_end - read_start;
+				if (ref_size < 0) {
+					break;
+				}
+				std::cout << "Merged: " << read_start << " " << read_end << " " << ref_start << " " << ref_size << std::endl;
+				local_alignments_[i].set_read_end(read_end);
+				local_alignments_[i].set_ref_end(ref_start + ref_size);
 				local_alignments_.erase(local_alignments_.begin() + j);
 				return true;
 			}
@@ -111,29 +124,41 @@ bool AlignedRead::merge() {
 
 void AlignedRead::print() {
 	for (auto la : local_alignments_) {
-		std::vector<int> p = la.get_path();
-		std::cout << "Read " << read_.get_id() << ": [";
-		std::cout << la.get_read_start() << "-" << la.get_read_end() << "] ";
-		for (auto n : p) {
-			std::cout << n << " ";
-		}
-		std::cout << std::endl;
+		std::cout << la.to_string(read_.get_id()) << std::endl;
 	}
 }
 
 std::string AlignedRead::getCorrectedRead(Graph const &graph) {
+	std::cout << "Local Alignments before merging:	" << std::endl;
+	print();
 	while(merge());
-	//print();
+	std::cout << "Local Alignments after merging:	" << std::endl;
+	print();
 	std::string corrected_read = "";
 	if (local_alignments_.size() == 0) {
-		return read_.get_sequence();
+		return "";//read_.get_sequence();
 	}
+	int max_cov = 0;
+	LocalAlignment best_la;
 	for (auto la : local_alignments_) {
-		std::string path_sequence = graph.concatenateNodes(la.get_path());
-		if (path_sequence.size() > corrected_read.size()) {
-			corrected_read = path_sequence;
+		int cov = la.get_read_end() - la.get_read_start();
+		if (cov > max_cov) {
+			max_cov = cov;
+			best_la = la;
 		}
-	}	
-	
-	return corrected_read;
+	}
+	std::cout << "Final Local Alignment:	" << std::endl;
+	std::cout << "Read size: " << read_.size() << " " << best_la.to_string(read_.get_id()) << "\n";
+	std::string result = graph.concatenateNodes(best_la.get_path());
+	if (output_mode_ == LONG) {
+		return result;
+	} else if (output_mode_ == SHORT){
+		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
+		result = result.substr(best_la.get_ref_start(), best_la.get_ref_end() - best_la.get_ref_start());
+		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
+		return result;
+	} else {
+		std::cerr << "Undefined output mode\n";
+		exit(1);
+	}
 }

@@ -22,6 +22,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 #include "Settings.hpp"
 
@@ -109,16 +110,24 @@ void IntraNodeChain::groupSeedsInNode(std::vector<InexactSeed> &inexact_seeds) {
 	for (int i = 0; i < seeds_.size(); ++i) {
 		fitAndExtend(consecutive_seeds, chain_coverage, seeds_[i]);
 	}
-	for (int i = 0; i < consecutive_seeds.size(); ++i) {
-		int req_cov = (consecutive_seeds[i].back().get_ref_end()
-			- consecutive_seeds[i][0].get_ref_start())
-			* min_cov_coef_;
-		if (chain_coverage[i] < req_cov) {
-			consecutive_seeds.erase(consecutive_seeds.begin() + i);
-			--i;
-			continue;
+	double mcc = min_cov_coef_;
+	while (inexact_seeds.size() == 0 && consecutive_seeds.size() > 0) {
+		for (int i = 0; i < consecutive_seeds.size(); ++i) {
+			/*
+			if (1 || consecutive_seeds.size() > 1) {
+				std::vector<Seed> chain = consecutive_seeds[i];
+				std::cout << "node ref read length\n";
+				for (auto s : chain) {
+					std::cout << s.to_string() << std::endl;
+				}
+			}
+			*/
+			int req_cov = (consecutive_seeds[i].back().get_ref_end()
+				- consecutive_seeds[i][0].get_ref_start())
+				* mcc;
+			InexactSeed is(consecutive_seeds[i]);
+			inexact_seeds.push_back(is);
 		}
-		InexactSeed is(consecutive_seeds[i]);
-		inexact_seeds.push_back(is);
+		mcc *= 0.9;
 	}
 }

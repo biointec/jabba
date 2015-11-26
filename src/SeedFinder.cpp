@@ -44,7 +44,7 @@ SeedFinder::~SeedFinder(){
 
 std::string SeedFinder::preprocessGraph(Graph const &graph) {
 	nodes_index_.push_back(0);
-	std::cout << "Building reference... ";
+	std::cout << "Building reference... " << std::endl;
 	int total_size = 0;
 	std::string reference;
 	for (int i = 1; i < graph.get_size(); i++) {
@@ -57,7 +57,7 @@ std::string SeedFinder::preprocessGraph(Graph const &graph) {
 		total_size += tnode.size() + 1;
 		nodes_index_.push_back(total_size);
 	}
-	std::cout << "Done.";
+	std::cout << "Done." << std::endl;
 	return reference;
 }
 
@@ -120,7 +120,8 @@ void SeedFinder::getSeeds(
 
 sparseSA * SeedFinder::init_essaMEM(std::string &ref, std::string const &meta,
 	int k)
-{
+{	
+	std::cout << "Constructing ESSA... " << std::endl;
 	std::vector<std::string> refdescr;
 	refdescr.push_back(meta);
 	std::vector<long> startpos;
@@ -145,7 +146,7 @@ sparseSA * SeedFinder::init_essaMEM(std::string &ref, std::string const &meta,
 		printRevCompForw,
 		false
 	);
-	sa->construct();
+	//sa->construct();
 	
 	stringstream * prefixstream = new stringstream();
 	(*prefixstream) << meta << "_" << k << "_" << suflink << "_" << child;
@@ -155,7 +156,8 @@ sparseSA * SeedFinder::init_essaMEM(std::string &ref, std::string const &meta,
 		sa->save(prefix);
 	}
 	delete prefixstream;
-	cerr << "INDEX SIZE IN BYTES: " << sa->index_size_in_bytes() << endl;
+	std::cout << "Done." << std::endl;
+	std::cout << "INDEX SIZE IN BYTES: " << sa->index_size_in_bytes() << endl;
 	return sa;
 }
 

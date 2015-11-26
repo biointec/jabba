@@ -31,6 +31,7 @@
         #include <sys/stat.h>
 #endif
 
+typedef enum {LONG, SHORT} OutputMode;
 class Settings {
 private:
 	int num_threads_; //maximal number of threads
@@ -41,6 +42,7 @@ private:
 	int max_passes_; //maximal number of passes
 	std::vector<Input> inputs_; //list of input files
 	int min_len_; //minimal seed length
+	OutputMode output_mode_; //what kind of output should be generated
 	/*
 	 *	methods
 	 */
@@ -67,6 +69,7 @@ public:
 	int get_max_passes() const {return max_passes_;}
 	std::vector<Input> get_input() const {return inputs_;}
 	int get_min_len() const {return min_len_;}
+	OutputMode get_output_mode() const {return output_mode_;}
 	std::string getLogFilename() const;
 };
 

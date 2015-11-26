@@ -13,7 +13,7 @@ add_definitions("-DJABBA_PATCH_LEVEL=${${PROJECT_NAME}_PATCH_LEVEL}")
 # set compiler
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
 # set g++ specific flags
-#set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb -g3 -pedantic -Wall -Wextra -Wno-sign-compare -fopenmp -lpthread -DNDEBUG -o $@")
-set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -pedantic -Wall -Wextra -Wno-sign-compare -fopenmp -lpthread")
+set(CMAKE_CXX_FLAGS "-std=c++11 -ggdb -g3 -pedantic -Wall -Wextra -Wno-sign-compare -fopenmp -lpthread -DNDEBUG -o $@")
+#set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -pedantic -Wall -Wextra -Wno-sign-compare -fopenmp -lpthread")
 
 add_subdirectory(src)

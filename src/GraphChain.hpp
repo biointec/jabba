@@ -28,7 +28,6 @@
 class GraphChain {
 	private:
 		Settings settings_; //settings
-		std::ofstream read_output_file_; //outputfile
 		SeedFinder seed_finder_; //handles indexing and seed finding
 		Graph graph_; //contains the de Bruijn graph
 		/*

@@ -56,6 +56,7 @@ Settings::Settings(int argc, char** args)
 	max_passes_ = 2;
 	min_len_ = 20;
 	directory_ = "Jabba_output";
+	output_mode_ = LONG;
 
 	FileType file_type(FASTA);
 	// extract the other parameters
@@ -89,6 +90,8 @@ Settings::Settings(int argc, char** args)
 		} else if (arg == "-o" || arg == "--output") {
 			++i;
 			directory_ = args[i];
+		} else if (arg == "-s" || arg == "--short") {
+			output_mode_ = SHORT;
 		} else {// filename
 			inputs_.push_back(Input(file_type, arg));
 		}
@@ -112,6 +115,14 @@ Settings::Settings(int argc, char** args)
 	std::cout << "Max Passes is " << max_passes_ << std::endl;
 	std::cout << "Min Seed Size is " << min_len_ << std::endl;
 	std::cout << "Output Directory is " << directory_ << std::endl;
+	std::cout << "Output Mode is ";
+	if (output_mode_ == SHORT){
+		std::cout << "short" << std::endl;
+	} else if (output_mode_ == LONG){
+		std::cout << "long" << std::endl;
+	} else {
+		std::cout << "not implemented" << std::endl;
+	}
 }
 
 void Settings::printProgramInfo() const {
@@ -137,6 +148,7 @@ void Settings::printUsage() const {
 	std::cout << "  -e\t--essak\t\tsparseness factor of the enhance suffix array [default = 1]\n";
 	std::cout << "  -t\t--threads\tnumber of threads [default = available cores]\n";
 	std::cout << "  -p\t--passes\tmaximal number of passes per read [default = 2]\n";
+	std::cout << "  -s\t--short\tdo not extend the reads\n";
 	std::cout << " [file_options file_name]\n";
 	std::cout << "  -o\t--output\toutput directory [default = Jabba_output]\n";
 	std::cout << "  -fastq\t\tfastq input files\n";

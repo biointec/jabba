@@ -19,7 +19,6 @@
  *******************************************************************************/
 #include "InterNodeChain.hpp"
 
-#include "ssw/ssw_cpp.h"
 #include "Graph.hpp"
 #include "SeedFinder.hpp"
 #include "IntraNodeChain.hpp"
@@ -30,14 +29,15 @@
 //ctors
 
 InterNodeChain::InterNodeChain(Read const &read, Graph const &graph,
-	Settings const &settings, SeedFinder &seed_finder)
+	Settings const &settings, SeedFinder &seed_finder, Alignment &alignment)
  :	read_(read),
 	graph_(graph),
 	settings_(settings),
 	seed_map_(),
 	map_keys_(),
 	seeds_of_size_(),
-	max_passes_(settings.get_max_passes())
+	max_passes_(settings.get_max_passes()),
+	alignment_(alignment)
 {
 	int seed_min_len = settings_.get_min_len();
 	int seed_count = 0;
@@ -46,6 +46,7 @@ InterNodeChain::InterNodeChain(Read const &read, Graph const &graph,
 	seed_map_.clear();
 	seed_finder.getSeeds(read_.get_sequence(), seed_map_, seeds_of_size_,
 		map_keys_, seed_count, seed_min_len);
+	printSeeds();
 }
 
 //methods
@@ -220,17 +221,26 @@ std::vector<InexactSeed> InterNodeChain::filterSeedsLocal(
 }
 
 std::pair<int, int> InterNodeChain::alignCorrectedToRead(std::string &corrected,
-	std::string const &read) const
+	std::string &read)
 {
-	StripedSmithWaterman::Aligner ssw_aligner/*(2,5,2,1)*/;
-	//Default filter
-	StripedSmithWaterman::Filter ssw_filter;
-	StripedSmithWaterman::Alignment ssw_al;
-	ssw_aligner.Align(corrected.c_str(), read.c_str(), read.size(),
-		ssw_filter, &ssw_al);
-	corrected = corrected.substr(ssw_al.query_begin,
-		ssw_al.query_end - ssw_al.query_begin);
-	return std::pair<int, int> (ssw_al.ref_begin, ssw_al.ref_end); 
+	//std::reverse(read.begin(), read.end());
+	//std::reverse(corrected.begin(), corrected.end());
+	int size = 200;
+	if (size > read.size()) {
+		size = read.size();
+	}
+	if (size > corrected.size()) {
+		size = corrected.size();
+	}
+	std::string read_p = read.substr(0, size);
+	std::string corrected_p = corrected.substr(0, size);
+	std::cout << read_p << std::endl;
+	std::cout << corrected_p << std::endl;
+	int score = alignment_.align(read_p, corrected_p);
+	std::cout << "score: " << score << std::endl;
+	alignment_.printAlignment(read_p, corrected_p);
+	
+	return std::pair<int, int> (0, 0);
 }
 
 
@@ -308,25 +318,33 @@ void InterNodeChain::filterOverlappingSeeds(
 }
 
 std::vector<LocalAlignment> InterNodeChain::correctRead(
-	std::vector<InexactSeed> inexact_seeds) const
+	std::vector<InexactSeed> inexact_seeds)
 {
 	std::vector<LocalAlignment> alignments;
 	for (int i = 0; i < inexact_seeds.size(); ++i) {
 		InexactSeed is = inexact_seeds[i];
-		LocalAlignment al;
+		LocalAlignment la;
+
+
 		std::vector<int> pre_path;
 		pre_path.push_back(is.get_node());
 		graph_.extendPath(pre_path, 0, 1000000, true);
 		std::reverse(pre_path.begin(), pre_path.end());
 		std::string pre_path_seq = graph_.concatenateNodes(pre_path);
-		int pre_path_size = pre_path_seq.size() - is.get_node_start();
+		std::cout << "Inexact Seed: " << is.get_node() << " " << is.get_node_start() << " " << is.get_node_end() << " " << is.get_read_start() << " " << is.get_read_end() << std::endl;
+		int pre_path_size = pre_path_seq.size() - (graph_.getSizeOfNode(is.get_node()) - is.get_node_start());
 		pre_path_seq = pre_path_seq.substr(0, pre_path_size);
-		if (is.get_read_start() >= pre_path_seq.size()) {
-			std::string r = read_.get_sequence().substr(0, is.get_read_start());
-			al.set_read_start(alignCorrectedToRead(pre_path_seq, r).first);
+		if (is.get_read_start() > pre_path_seq.size()) {
+			//std::string r = read_.get_sequence().substr(0, is.get_read_start());
+			//la.set_read_start(alignCorrectedToRead(pre_path_seq, r).first);
+			la.set_read_start(is.get_read_start()); //TODO
+			la.set_ref_start(pre_path_seq.size());
 		} else {
-			al.set_read_start(0);
+			la.set_read_start(0);
+			la.set_ref_start(pre_path_seq.size() - is.get_read_start());
 		}
+
+
 		std::vector<int> post_path;
 		post_path.push_back(is.get_node());
 		graph_.extendPath(post_path, 0, 1000000, false);
@@ -338,16 +356,23 @@ std::vector<LocalAlignment> InterNodeChain::correctRead(
 			post_path_seq = "";
 		}
 		if (read_.size() - is.get_read_end() >= post_path_seq.size()) {
-			std::string r = read_.get_sequence().substr(is.get_read_end());
-			al.set_read_end(alignCorrectedToRead(pre_path_seq, r).second);
+			//std::string r = read_.get_sequence().substr(is.get_read_end());
+			//la.set_read_end(alignCorrectedToRead(pre_path_seq, r).second);
+			la.set_read_end(is.get_read_end()); //TODO
+			la.set_ref_end(la.get_ref_start() + is.get_read_end() - is.get_read_start());
 		} else {
-			al.set_read_end(read_.size());
+			la.set_read_end(read_.size());
+			la.set_ref_end(la.get_ref_start() + read_.size());
 		}
+		
+
+
 		for (int j = 1; j < post_path.size(); ++j) {
 			pre_path.push_back(post_path[j]);
 		}
-		al.set_path(pre_path);
-		alignments.push_back(al);
+		la.set_path(pre_path);
+
+		alignments.push_back(la);
 	}
 	return alignments;
 }
@@ -359,14 +384,17 @@ std::string InterNodeChain::chainSeeds(AlignedRead &ar) {
 		for (int j = 0; j < segments.size(); ++j) {
 			std::vector<InexactSeed> inexact_seeds
 				= filterSeedsLocal(segments[j]);
+			std::cout << inexact_seeds.size() << " inexact seeds initial\n";
 			if (inexact_seeds.size() == 0) {
 				continue;
 			}
 			filterSeedsGlobal(inexact_seeds, i);
+			std::cout << inexact_seeds.size() << " inexact seeds remain\n";
 			if (inexact_seeds.size() == 0) {
 				continue;
 			}
-			filterOverlappingSeeds(inexact_seeds);
+			//filterOverlappingSeeds(inexact_seeds);
+			std::cout << inexact_seeds.size() << " inexact seeds remain\n";
 			if (inexact_seeds.size() == 0) {
 				continue;
 			}
