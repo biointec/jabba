@@ -105,7 +105,7 @@ struct interval_t {
 };
 
 struct sparseSA {
-  vector<string> &descr; // Descriptions of concatenated sequences.
+  vector<string> const &descr; // Descriptions of concatenated sequences.
   vector<long> &startpos; // Lengths of concatenated sequences.
   long maxdescrlen; // Maximum length of the sequence description, used for formatting.
   bool _4column; // Use 4 column output format.
@@ -113,7 +113,7 @@ struct sparseSA {
   long N; //!< Length of the sequence.
   long logN; // ceil(log(N)) 
   long NKm1; // N/K - 1
-  string &S; //!< Reference to sequence data.
+  string const &S; //!< Reference to sequence data.
   vector<unsigned int> SA;  // Suffix array.
   vector<int> ISA;  // Inverse suffix array.
   vec_uchar LCP; // Simulates a vector<int> LCP.
@@ -176,8 +176,9 @@ struct sparseSA {
   } 
 
   // Constructor builds sparse suffix array. 
-  sparseSA(string &S_, vector<string> &descr_, vector<long> &startpos_, bool __4column, 
-  long K_, bool suflink_, bool child_, bool kmer_, int sparseMult_, int kMerSize_, bool printSubstring_, bool printRevCompForw_, bool nucleotidesOnly_);
+  sparseSA(string const &S_, vector<string> const &descr_, vector<long> &startpos_,
+  bool __4column, long K_, bool suflink_, bool child_, bool kmer_, int sparseMult_,
+  int kMerSize_, bool printSubstring_, bool printRevCompForw_, bool nucleotidesOnly_);
 
   // Modified Kasai et all for LCP computation.
   void computeLCP();
@@ -209,7 +210,7 @@ struct sparseSA {
 
   // Traverse pattern P starting from a given prefix and interval
   // until mismatch or min_len characters reached.
-  inline void traverse(string &P, long prefix, interval_t &cur, int min_len);
+  inline void traverse(string const &P, long prefix, interval_t &cur, int min_len);
   inline void traverse_faster(const string &P,const long prefix, interval_t &cur, int min_len);
 
   // Simulate a suffix link.
@@ -236,14 +237,14 @@ struct sparseSA {
 
   // Given a position i in S, finds a left maximal match of minimum
   // length within K steps.
-  inline void find_Lmaximal(string &P, long prefix, long i, long len, vector<match_t> &matches, int min_len, bool print);
+  inline void find_Lmaximal(string const &P, long prefix, long i, long len, vector<match_t> &matches, int min_len, bool print);
 
   // Given an interval where the given prefix is matched up to a
   // mismatch, find all MEMs up to a minimum match depth.
-  void collectMEMs(string &P, long prefix, interval_t mli, interval_t xmi, vector<match_t> &matches, int min_len, bool print);
+  void collectMEMs(string const &P, long prefix, interval_t mli, interval_t xmi, vector<match_t> &matches, int min_len, bool print);
 
   // Find all MEMs given a prefix pattern offset k.
-  void findMEM(long k, string &P, vector<match_t> &matches, int min_len, bool print);
+  void findMEM(long k, string const &P, vector<match_t> &matches, int min_len, bool print);
 
   // NOTE: min_len must be > 1
   void findMAM(string &P, vector<match_t> &matches, int min_len, long& memCount, bool print);

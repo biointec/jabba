@@ -29,7 +29,7 @@
 //ctors
 
 InterNodeChain::InterNodeChain(Read const &read, Graph const &graph,
-	Settings const &settings, SeedFinder &seed_finder, Alignment &alignment)
+	Settings const &settings, Alignment &alignment)
  :	read_(read),
 	graph_(graph),
 	settings_(settings),
@@ -44,7 +44,7 @@ InterNodeChain::InterNodeChain(Read const &read, Graph const &graph,
 	seeds_of_size_.clear();
 	map_keys_.clear();
 	seed_map_.clear();
-	seed_finder.getSeeds(read_.get_sequence(), seed_map_, seeds_of_size_,
+	graph_.getSeeds(read_.get_sequence(), seed_map_, seeds_of_size_,
 		map_keys_, seed_count, seed_min_len);
 	printSeeds();
 }
@@ -244,45 +244,6 @@ std::pair<int, int> InterNodeChain::alignCorrectedToRead(std::string &corrected,
 }
 
 
-void InterNodeChain::chainPaths(AlignedRead &ar) const
-{
-	ar.sort();
-	std::vector<LocalAlignment> las = ar.get_local_alignments();
-	if (las.size() < 2) {
-		return;
-	}
-	LocalAlignment curr_la = las[0];
-	for (int i = 1; i < las.size(); ++i) {
-		LocalAlignment prev_la = curr_la;
-		curr_la = las[i];
-		LocalAlignment la;
-		//find path
-		int source = prev_la.get_path().back();
-		int sink = curr_la.get_path()[0];
-		int dist = curr_la.get_read_start() - prev_la.get_read_end();
-		std::vector<int> path = graph_.findPath(source, sink, dist);
-		if (std::find(path.begin(), path.end(), 0) != path.end()) {
-			continue;
-		} else {
-			//
-		}
-		std::vector<int> new_path = prev_la.get_path();
-		std::vector<int> next_path = curr_la.get_path();
-		for (int j = 1; j < path.size(); ++j) {
-			new_path.push_back(path[j]);
-		}
-		for (int j = 1; j < next_path.size(); ++j) {
-			new_path.push_back(next_path[j]);
-		}
-		prev_la.set_path(new_path);
-		prev_la.set_read_end(curr_la.get_read_end());
-		las[i - 1] = prev_la;
-		las.erase(las.begin() + i);
-		--i;
-	}
-	ar.set_local_alignments(las);
-}
-
 //when several global seeds have nontrivial overlap, we remove them
 void InterNodeChain::filterOverlappingSeeds(
 	std::vector<InexactSeed> &inexact_seeds) const
@@ -371,7 +332,7 @@ std::vector<LocalAlignment> InterNodeChain::correctRead(
 			pre_path.push_back(post_path[j]);
 		}
 		la.set_path(pre_path);
-
+		std::cout << "Local Alignment: " << la.to_string(read_.get_id()) << std::endl;
 		alignments.push_back(la);
 	}
 	return alignments;
@@ -404,12 +365,12 @@ std::string InterNodeChain::chainSeeds(AlignedRead &ar) {
 		}
 		chainPaths(ar);
 	}
-	finalChaining(ar);
+	chainPaths(ar);
 	std::string result = ar.getCorrectedRead(graph_);
 	return result;
 }
 
-void InterNodeChain::finalChaining(AlignedRead &ar) const {
+void InterNodeChain::chainPaths(AlignedRead &ar) const {
 	ar.sort();
 	std::vector<LocalAlignment> las = ar.get_local_alignments();
 	if (las.size() < 2) {
@@ -429,6 +390,7 @@ void InterNodeChain::finalChaining(AlignedRead &ar) const {
 		if (std::find(path.begin(), path.end(), 0) != path.end()) {
 			continue;
 		}
+		std::cout << "path found\n";
 		std::vector<int> new_path = prev_la.get_path();
 		std::vector<int> next_path = curr_la.get_path();
 		for (int j = 1; j < path.size(); ++j) {
@@ -439,6 +401,7 @@ void InterNodeChain::finalChaining(AlignedRead &ar) const {
 		}
 		prev_la.set_path(new_path);
 		prev_la.set_read_end(curr_la.get_read_end());
+		prev_la.set_ref_end(prev_la.get_ref_start() + prev_la.get_read_end() - prev_la.get_read_start());
 		las[i - 1] = prev_la;
 		las.erase(las.begin() + i);
 		--i;

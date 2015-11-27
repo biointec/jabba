@@ -16,9 +16,13 @@ pthread_mutex_t cout_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 long memCount = 0;
 
-sparseSA::sparseSA(string &S_, vector<string> &descr_, vector<long> &startpos_, 
-        bool __4column, long K_, bool suflink_, bool child_, bool kmer_, int sparseMult_, int kMerSize_, bool printSubstring_, bool printRevCompForw_, bool nucleotidesOnly_) : 
-  descr(descr_), startpos(startpos_), S(S_) {
+sparseSA::sparseSA(string const &S_, vector<string> const &descr_,
+	vector<long> &startpos_, bool __4column, long K_,
+	bool suflink_, bool child_, bool kmer_,
+	int sparseMult_, int kMerSize_, bool printSubstring_,
+	bool printRevCompForw_, bool nucleotidesOnly_)
+      :	descr(descr_), startpos(startpos_), S(S_)
+{
   _4column = __4column;
   hasChild = child_;
   hasSufLink = suflink_;
@@ -37,6 +41,7 @@ sparseSA::sparseSA(string &S_, vector<string> &descr_, vector<long> &startpos_,
   }
   K = K_;
 
+/*
   // Increase string length so divisible by K. 
   // Don't forget to count $ termination character. 
   if(S.length() % K != 0) {
@@ -45,8 +50,11 @@ sparseSA::sparseSA(string &S_, vector<string> &descr_, vector<long> &startpos_,
   }
   // Make sure last K-sampled characeter is this special character as well!!
   for(long i = 0; i < K; i++) S += '$'; // Append "special" end character. Note: It must be lexicographically less.
-  N = S.length();
+  
   std::string(S.data(), S.size()).swap(S);
+*/
+
+  N = S.length();
 
     // Adjust to "sampled" size. 
   logN = (long)ceil(log(N/K) / log(2.0));
@@ -539,7 +547,7 @@ bool sparseSA::search(string &P, long &start, long &end) {
 
 // Traverse pattern P starting from a given prefix and interval
 // until mismatch or min_len characters reached.
-void sparseSA::traverse(string &P, long prefix, interval_t &cur, int min_len) {
+void sparseSA::traverse(string const &P, long prefix, interval_t &cur, int min_len) {
   if(hasKmer && cur.depth == 0 && min_len >= kMerSize){//free match first bases
     unsigned int index = 0;
     for(size_t i = 0; i < kMerSize; i++)
@@ -729,7 +737,7 @@ bool sparseSA::suffixlink(interval_t &m) {
 }
 
 // For a given offset in the prefix k, find all MEMs.
-void sparseSA::findMEM(long k, string &P, vector<match_t> &matches, int min_len, bool print) {
+void sparseSA::findMEM(long k, string const &P, vector<match_t> &matches, int min_len, bool print) {
   if(k < 0 || k >= K) { cerr << "Invalid k." << endl; return; }
   // Offset all intervals at different start points.
   long prefix = k;
@@ -809,7 +817,7 @@ void sparseSA::findMEM(long k, string &P, vector<match_t> &matches, int min_len,
 
 // Use LCP information to locate right maximal matches. Test each for
 // left maximality.
-void sparseSA::collectMEMs(string &P, long prefix, interval_t mli, interval_t xmi, vector<match_t> &matches, int min_len, bool print) {
+void sparseSA::collectMEMs(string const &P, long prefix, interval_t mli, interval_t xmi, vector<match_t> &matches, int min_len, bool print) {
   // All of the suffixes in xmi's interval are right maximal.
   for(long i = xmi.start; i <= xmi.end; i++) find_Lmaximal(P, prefix, SA[i], xmi.depth, matches, min_len, print);
 
@@ -838,7 +846,7 @@ void sparseSA::collectMEMs(string &P, long prefix, interval_t mli, interval_t xm
 
 
 // Finds left maximal matches given a right maximal match at position i.
-void sparseSA::find_Lmaximal(string &P, long prefix, long i, long len, vector<match_t> &matches, int min_len, bool print) {
+void sparseSA::find_Lmaximal(string const &P, long prefix, long i, long len, vector<match_t> &matches, int min_len, bool print) {
   long Plength = P.length();
   // Advance to the left up to K steps.
   for(long k = 0; k < sparseMult*K; k++) {

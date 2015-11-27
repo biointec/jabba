@@ -108,8 +108,7 @@ class InterNodeChain{
 		 *	ctors
 		 */
 		InterNodeChain(Read const &read, Graph const &graph,
-			Settings const &settings_,
-			SeedFinder &seed_finder, Alignment &alignment);
+			Settings const &settings, Alignment &alignment);
 		/*
 		 *	methods
 		 */

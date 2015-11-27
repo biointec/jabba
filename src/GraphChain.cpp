@@ -159,7 +159,7 @@ std::vector<std::string> GraphChain::processBatch(
 			std::cout << "Processing read " << read.get_id() << std::endl;
 			std::cerr << "Processing read " << read.get_id() << std::endl;
 			Alignment alignment(250, 30, 1, -4, -2, -3);
-			InterNodeChain iernc(read, graph_, settings_, seed_finder_, alignment);
+			InterNodeChain iernc(read, graph_, settings_, alignment);
 			AlignedRead ar(read, settings_.get_output_mode());
 			corrected_reads[read.get_id() - read_count] = iernc.chainSeeds(ar);
 		}
@@ -168,13 +168,13 @@ std::vector<std::string> GraphChain::processBatch(
 }
 
 GraphChain::GraphChain(int argc, char * argv[]) :
-	settings_(argc, argv)
+	settings_(argc, argv), graph_(settings_)
 {
 	//read graph
 	Input graph = settings_.get_graph();
 	graph_.set_k(settings_.get_dbg_k());
 	readGraph(graph);
-	seed_finder_.init(graph_, settings_.get_min_len(), settings_.get_essa_k());
+	graph_.init_seed_finder();
 	omp_set_num_threads(settings_.get_num_threads());
 }
 

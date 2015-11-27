@@ -25,36 +25,30 @@
 class TNode {
 private:
 	int id_;			//node ID
-	TString sequence_;		//DNA sequence of the node
-	TString rc_sequence_;		//DNA sequence of the rc node
+	int size_;			//size
+	//TString sequence_;		//DNA sequence of the node
+	//TString rc_sequence_;		//DNA sequence of the rc node
 	std::vector<int> in_edges_;	//edges that enter the node
 	std::vector<int> out_edges_;	//edges that leave the node
 public:
 	/*
 	 *	ctors
 	 */
-	TNode(std::string const &sequence, int const &id)
+	TNode(std::string const &sequence, int const &id, int const &size)
 	      :	id_(id),
-		sequence_(sequence),
-		rc_sequence_(sequence)
-	{
-		rc_sequence_.reverseComplement();
-	}
-	TNode(std::string const &sequence, int const &id,
+		size_(size)
+	{}
+	TNode(std::string const &sequence, int const &id, int const &size,
 		 std::vector<int> const &in_edges, 
 		 std::vector<int> const &out_edges)
 	      :	id_(id),
-		sequence_(sequence),
-		rc_sequence_(sequence),
+		size_(size),
 		in_edges_(in_edges),
 		out_edges_(out_edges)
-	{
-		rc_sequence_.reverseComplement();
-	}
+	{}
 	TNode(TNode const &tnode)
 	      :	id_(tnode.get_id()),
-		sequence_(tnode.get_sequence()),
-		rc_sequence_(tnode.get_rc_sequence()),
+		size_(tnode.size()),
 		in_edges_(tnode.get_in_edges()),
 		out_edges_(tnode.get_out_edges())
 	{}
@@ -75,9 +69,7 @@ public:
 	std::vector<int> get_out_edges() const {return out_edges_;}
 	std::vector<int> get_rc_out_edges() const {return reverseEdges(in_edges_);}
 	
-	int size() const {return sequence_.getLength();}
-	std::string get_sequence() const {return sequence_.getSequence();}
-	std::string get_rc_sequence() const {return rc_sequence_.getSequence();}
+	int size() const {return size_;};
 };
 
 #endif

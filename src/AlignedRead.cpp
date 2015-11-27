@@ -153,7 +153,7 @@ std::string AlignedRead::getCorrectedRead(Graph const &graph) {
 	if (output_mode_ == LONG) {
 		return result;
 	} else if (output_mode_ == SHORT){
-		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
+		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end()<< std::endl;
 		result = result.substr(best_la.get_ref_start(), best_la.get_ref_end() - best_la.get_ref_start());
 		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
 		return result;

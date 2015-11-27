@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                 *
  *******************************************************************************/
 #include "Graph.hpp"
+#include "Nucleotide.hpp"
 
 #include <deque>
 #include <map>
@@ -26,8 +27,12 @@
 void Graph::addNode(std::string const &sequence, std::vector<int> const &in_edges, 
 	std::vector<int> const &out_edges)
 {
-	TNode new_node(sequence, nodes_.size(), in_edges, out_edges);
+	TNode new_node("", nodes_.size(), sequence.size(), in_edges, out_edges);
 	nodes_.push_back(new_node);
+	seed_finder_.addNodeToReference(sequence);
+	std::string rc_sequence = sequence;
+	Nucleotide::revCompl(rc_sequence);
+	seed_finder_.addNodeToReference(rc_sequence);
 }
 
 std::vector<int> Graph::getOutEdges(int node_id) const{
@@ -57,12 +62,8 @@ int Graph::getSizeOfNode(int node_id) const{
 	}
 }
 
-std::string Graph::getSequenceOfNode(int node_id) const{
-	if(node_id > 0){
-		return nodes_[node_id].get_sequence();
-	} else {
-		return nodes_[-node_id].get_rc_sequence();
-	}
+std::string Graph::getSequenceOfNode(int node_id) const {
+	return seed_finder_.getNode(node_id);
 }
 
 
