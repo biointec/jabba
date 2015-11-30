@@ -119,7 +119,7 @@ void GraphChain::alignReads(Input const &library) {
 			read_count);
 		batch_size = reads.size();
 		for (int i = 0; i < batch_size; ++i) {
-			if (corrected_reads[i].size() > 1000) {
+			if (corrected_reads[i].size() > 0) {
 				read_output_file << ">" << reads[i].get_meta() << std::endl
 				<< corrected_reads[i] << std::endl;
 			} else {

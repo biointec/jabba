@@ -38,10 +38,8 @@ class Graph{
 		 *	ctors
 		 */
 		Graph(Settings const &settings)
-		      :	size_(0), k_(0), settings_(settings)
+		      :	size_(0), k_(0), settings_(settings), seed_finder_(settings)
 		{
-			seed_finder_.set_min_length(settings.get_min_len());
-			seed_finder_.set_k(settings.get_essa_k());
 			TNode empty_node("", -1, 0);
 			nodes_.push_back(empty_node);
 		}

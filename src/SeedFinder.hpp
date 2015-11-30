@@ -24,24 +24,32 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include "Settings.hpp"
 
 class sparseSA;
 class Seed;
 
 class SeedFinder{
 	private:
+		Settings const &settings_;
 		int min_length_; //min length of seeds
 		int k_; //sparseness factor
 		sparseSA * sa_; //suffix array
 		std::string reference_; //sparseSA requires the sequence from
 					//which it is built to be kept in memory
 		std::vector<int> nodes_index_; //list containing size of nodes
+		
 	public:
 		/*
 		 *	ctors
 		 */
-		SeedFinder(){nodes_index_.push_back(0);}
-		SeedFinder(int min_length, int k);
+		SeedFinder(Settings const &settings)
+		      :	settings_(settings)
+		{
+			min_length_ = settings.get_min_len();
+			k_ = settings.get_essa_k();
+			nodes_index_.push_back(0);
+		}
 		void init();
 		/*
 		 *	dtors
@@ -50,8 +58,6 @@ class SeedFinder{
 		/*
 		 *	methods
 		 */
-		void set_min_length(int min_length) {min_length_ = min_length;}
-		void set_k(int k) {k_ = k;}
 		void addNodeToReference(std::string const &node);
 		void preprocessReference();
 		//initialise the ESSA

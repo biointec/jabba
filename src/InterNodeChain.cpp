@@ -363,9 +363,9 @@ std::string InterNodeChain::chainSeeds(AlignedRead &ar) {
 				= correctRead(inexact_seeds);
 			ar.correct(alignments);
 		}
-		chainPaths(ar);
+		//chainPaths(ar);
 	}
-	chainPaths(ar);
+	//chainPaths(ar);
 	std::string result = ar.getCorrectedRead(graph_);
 	return result;
 }

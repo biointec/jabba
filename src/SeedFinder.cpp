@@ -27,12 +27,6 @@
 #include "mummer/sparseSA.hpp"
 #include "Input.hpp"
 
-SeedFinder::SeedFinder(int min_length, int k) {
-	k_ = k;
-	min_length_ = min_length;
-	nodes_index_.push_back(0);
-}
-
 void SeedFinder::init () {
 	preprocessReference();
 	sa_ = init_essaMEM("DBGraph");
@@ -143,7 +137,7 @@ sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {
 	//sa->construct();
 	
 	stringstream * prefixstream = new stringstream();
-	(*prefixstream) << meta << "_" << k_ << "_" << suflink << "_" << child;
+	(*prefixstream) << settings_.get_directory() << "/" << meta << "_" << k_ << "_" << suflink << "_" << child;
 	string prefix = prefixstream->str();
 	if(!sa->load(prefix)) {
 		sa->construct();

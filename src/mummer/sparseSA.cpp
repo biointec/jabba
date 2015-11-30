@@ -283,14 +283,14 @@ void sparseSA::save(const string &prefix){
 }
 
 bool sparseSA::load(const string &prefix){
-    cerr << "atempting to load index " << prefix << " ... "<< endl;
+    cout << "atempting to load index " << prefix << " ... "<< endl;
     string basic = prefix;
     string aux = basic + ".aux";
     string sa = basic + ".sa";
     string lcp = basic + ".lcp";
     ifstream aux_s (aux.c_str(), ios::binary);
     if(!aux_s.good()){
-        cerr << "unable to open " << prefix << endl;
+        cout << "unable to open " << prefix << endl;
         return false;
     }
     //read auxiliary information
@@ -354,7 +354,7 @@ bool sparseSA::load(const string &prefix){
         kmer_s.read((char*)&KMR[0],sizeKMR*sizeof(saTuple_t));
         kmer_s.close();
     }
-    cerr << "index loaded succesful" << endl;
+    cout << "index loaded succesful" << endl;
     return true;
 }
 
@@ -370,9 +370,9 @@ void sparseSA::construct(){
         delete[] BucketBegin;
 
         // Suffix sort integer text.
-        cerr << "# suffixsort()" << endl;
+        cout << "# suffixsort()" << endl;
         suffixsort(t_new, intSA, N/K, bucketNr, 0);
-        cerr << "# DONE suffixsort()" << endl;
+        cout << "# DONE suffixsort()" << endl;
 
         delete[] t_new;
 
@@ -414,10 +414,10 @@ void sparseSA::construct(){
         suffixsort(&ISA[0], SAint , N-1, alphalast, 1);
     }
 
-    cerr << "N=" << N << endl;
+    cout << "N=" << N << endl;
   
     LCP.resize(N/K);
-    cerr << "N/K=" << N/K << endl;
+    cout << "N/K=" << N/K << endl;
     // Use algorithm by Kasai et al to construct LCP array.
     computeLCP();  // SA + ISA -> LCP
     LCP.init();
@@ -435,7 +435,7 @@ void sparseSA::construct(){
     }
     if(hasKmer){
         kMerTableSize = 1 << (2*kMerSize);
-        cerr << "kmer table size: " << kMerTableSize << endl;
+        cout << "kmer table size: " << kMerTableSize << endl;
         KMR.resize(kMerTableSize, saTuple_t());
         //Use algorithm by Abouelhoda et al to construct CHILD array
         computeKmer();
