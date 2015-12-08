@@ -156,8 +156,8 @@ std::vector<std::string> GraphChain::processBatch(
 		for (int i = 0; i < reads_per_thread; ++i) {
 			Read read = reads[local_read_count + i];
 			read.set_id(read_count + local_read_count + i);
-			std::cout << "Processing read " << read.get_id() << std::endl;
-			std::cerr << "Processing read " << read.get_id() << std::endl;
+			//std::cout << "Processing read " << read.get_id() << std::endl;
+			//std::cerr << "Processing read " << read.get_id() << std::endl;
 			Alignment alignment(250, 30, 1, -4, -2, -3);
 			InterNodeChain iernc(read, graph_, settings_, alignment);
 			AlignedRead ar(read, settings_.get_output_mode());

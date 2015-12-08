@@ -111,7 +111,7 @@ bool AlignedRead::merge() {
 				if (ref_size < 0) {
 					break;
 				}
-				std::cout << "Merged: " << read_start << " " << read_end << " " << ref_start << " " << ref_size << std::endl;
+				//std::cout << "Merged: " << read_start << " " << read_end << " " << ref_start << " " << ref_size << std::endl;
 				local_alignments_[i].set_read_end(read_end);
 				local_alignments_[i].set_ref_end(ref_start + ref_size);
 				local_alignments_.erase(local_alignments_.begin() + j);
@@ -129,11 +129,11 @@ void AlignedRead::print() {
 }
 
 std::string AlignedRead::getCorrectedRead(Graph const &graph) {
-	std::cout << "Local Alignments before merging:	" << std::endl;
-	print();
+	//std::cout << "Local Alignments before merging:	" << std::endl;
+	//print();
 	while(merge());
-	std::cout << "Local Alignments after merging:	" << std::endl;
-	print();
+	//std::cout << "Local Alignments after merging:	" << std::endl;
+	//print();
 	std::string corrected_read = "";
 	if (local_alignments_.size() == 0) {
 		return "";//read_.get_sequence();
@@ -147,15 +147,15 @@ std::string AlignedRead::getCorrectedRead(Graph const &graph) {
 			best_la = la;
 		}
 	}
-	std::cout << "Final Local Alignment:	" << std::endl;
-	std::cout << "Read size: " << read_.size() << " " << best_la.to_string(read_.get_id()) << "\n";
+	//std::cout << "Final Local Alignment:	" << std::endl;
+	//std::cout << "Read size: " << read_.size() << " " << best_la.to_string(read_.get_id()) << "\n";
 	std::string result = graph.concatenateNodes(best_la.get_path());
 	if (output_mode_ == LONG) {
 		return result;
 	} else if (output_mode_ == SHORT){
-		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end()<< std::endl;
+		//std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end()<< std::endl;
 		result = result.substr(best_la.get_ref_start(), best_la.get_ref_end() - best_la.get_ref_start());
-		std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
+		//std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
 		return result;
 	} else {
 		std::cerr << "Undefined output mode\n";
