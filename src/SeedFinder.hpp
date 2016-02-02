@@ -37,7 +37,7 @@ class SeedFinder{
 		sparseSA * sa_; //suffix array
 		std::string reference_; //sparseSA requires the sequence from
 					//which it is built to be kept in memory
-		std::vector<int> nodes_index_; //list containing size of nodes
+		std::vector<long> nodes_index_; //list containing size of nodes
 		
 	public:
 		/*
@@ -69,14 +69,14 @@ class SeedFinder{
 			std::vector<int> &map_keys, int &seed_count,
 			int const &seed_min_length) const;
 		//find the node in which a seed is contained
-		int binary_node_search(int const &mem_start) const;
+		int binary_node_search(long const &mem_start) const;
 		//find where in the node the seed starts
-		int startOfHit(int node_nr, int start_in_ref) const;
+		int startOfHit(int node_nr, long start_in_ref) const;
 		//
 		std::string getNode(int const node_id) const {
 			int index = 2 * node_id * (node_id < 0 ? -1 : 1) - 2 + (node_id < 0);
-			int pos = nodes_index_[index];
-			int len = nodes_index_[index + 1] - pos - 1;
+			long pos = nodes_index_[index];
+			long len = nodes_index_[index + 1] - pos - 1;
 			return reference_.substr(pos, len);
 		}
 };

@@ -28,7 +28,7 @@
 #include "Input.hpp"
 
 void SeedFinder::init () {
-	preprocessReference();
+	//preprocessReference();
 	sa_ = init_essaMEM("DBGraph");
 }
 
@@ -39,7 +39,7 @@ SeedFinder::~SeedFinder(){
 void SeedFinder::addNodeToReference(std::string const &node) {
 	reference_ += node;
 	reference_ += "#";
-	int size = nodes_index_.back() + node.size() + 1;
+	long size = nodes_index_.back() + node.size() + 1;
 	nodes_index_.push_back(size);
 }
 
@@ -58,10 +58,10 @@ void SeedFinder::preprocessReference() {
 	}
 }
 
-int SeedFinder::binary_node_search(int const &mem_start) const {
-	int signed left = 0;
-	int signed mid;
-	int signed right = nodes_index_.size();
+int SeedFinder::binary_node_search(long const &mem_start) const {
+	long signed left = 0;
+	long signed mid;
+	long signed right = nodes_index_.size();
 	while(left + 1 != right){
 		mid = (left + right) / 2;
 		if(nodes_index_.at(mid) < mem_start){
@@ -76,11 +76,12 @@ int SeedFinder::binary_node_search(int const &mem_start) const {
 	return (((left + 2) / 2)) * (left % 2 == 0 ? 1 : -1);
 }
 
-int SeedFinder::startOfHit(int node_nr, int start_in_ref) const {
+int SeedFinder::startOfHit(int node_nr, long start_in_ref) const {
 	
-	int start_of_node = nodes_index_[2 * node_nr * (node_nr < 0 ? -1 : 1) - 2 + (node_nr < 0)];
-	return start_in_ref - start_of_node;
+	long start_of_node = nodes_index_[2 * node_nr * (node_nr < 0 ? -1 : 1) - 2 + (node_nr < 0)];
+	return (int) (start_in_ref - start_of_node);
 }
+
 void SeedFinder::getSeeds(std::string const &read,
 	std::map<int, std::vector<Seed>> &seed_map,
 	std::vector<int> &seeds_of_size, std::vector<int> &map_keys,
@@ -114,24 +115,27 @@ sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {
 	refdescr.push_back(meta);
 	std::vector<long> startpos;
 	startpos.push_back(0); //only one reference
+	bool suflink = true;
+	bool child = true;
+	bool kmer = true;
+	int sparseMult = 1;
+	int kmer_size = 9;
 	bool printSubstring = false;
 	bool printRevCompForw = false;
-	int sparseMult = 1;
-	bool suflink = true;
-	bool child = false;
 	sparseSA * sa;
-	sa = new sparseSA(reference_,
-		refdescr,
-		startpos,
-		false,
-		k_,
-		suflink,
-		child,
-		false,
-		sparseMult,
-		0,
-		printSubstring,
-		printRevCompForw,
+	sa = new sparseSA(
+		reference_,		//reference string
+		refdescr,		//description of the ref
+		startpos,		//vector of startpositions in the ref
+		false,			//4column format
+		k_,			//sparseness factor
+		suflink,		//use suffix links
+		child,			//use child arrays
+		kmer,			//use kmer table
+		sparseMult,		//sparseness in query
+		kmer_size,		//kmer size for kmer index
+		printSubstring,		//
+		printRevCompForw,	//
 		false
 	);
 	//sa->construct();
