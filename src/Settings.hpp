@@ -22,7 +22,7 @@
 
 #include <vector>
 
-#include "Input.hpp"
+#include "library.h"
 
 #ifdef _MSC_VER
         #include <windows.h>
@@ -36,13 +36,14 @@ class Settings {
 private:
 	int num_threads_; //maximal number of threads
 	std::string directory_; //output directory
-	Input graph_; //graph file
+	ReadLibrary *graph_; //graph file
 	int dbg_k_; //de Bruijn graph k-mer size
 	int essa_k_; //ESSA sparseness parameter
 	int max_passes_; //maximal number of passes
-	std::vector<Input> inputs_; //list of input files
 	int min_len_; //minimal seed length
 	OutputMode output_mode_; //what kind of output should be generated
+	LibraryContainer libraries_; //libraries
+	
 	/*
 	 *	methods
 	 */
@@ -56,21 +57,30 @@ public:
 	/*
 	 *	ctors
 	 */
-	Settings(int argc, char** args);
+        Settings(int argc, char** args);
 	/*
 	 *	methods
 	 */
 	//gettres
 	int get_num_threads() const {return num_threads_;}
 	std::string get_directory() const {return directory_;}
-	Input get_graph() const {return graph_;}
+	ReadLibrary get_graph() const {return *graph_;}
 	int get_dbg_k() const {return dbg_k_;}
 	int get_essa_k() const {return essa_k_;}
 	int get_max_passes() const {return max_passes_;}
-	std::vector<Input> get_input() const {return inputs_;}
 	int get_min_len() const {return min_len_;}
 	OutputMode get_output_mode() const {return output_mode_;}
 	std::string getLogFilename() const;
+        /**
+         * Get the IO block size in number of bases
+         * @return The IO block size in number of bases
+         */
+        size_t get_thread_work_size() const {
+                return 1000000;
+        }
+        LibraryContainer & get_libraries() {
+                return libraries_;
+        }
 };
 
 #endif

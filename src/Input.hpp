@@ -22,8 +22,8 @@
 
 #include <string>
 
-typedef enum {FASTQ, FASTA, FASTQ_GZ, FASTA_GZ, SAM, SAM_GZ, BAM, RAW, RAW_GZ}
-	FileType;
+// typedef enum {FASTQ, FASTA, FASTQ_GZ, FASTA_GZ, SAM, SAM_GZ, BAM, RAW, RAW_GZ}
+// 	FileType;
 std::ostream &operator<<(std::ostream &out, const FileType &fileType);
 
 struct Input {

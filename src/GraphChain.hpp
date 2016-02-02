@@ -21,9 +21,9 @@
 #define GRAPHCHAIN_HPP
 
 #include "Settings.hpp"
-#include "ReadLibrary.hpp"
 #include "SeedFinder.hpp"
 #include "Graph.hpp"
+#include "library.h"
 
 class GraphChain {
 	private:
@@ -36,12 +36,11 @@ class GraphChain {
 		void extractNbs(std::string const &arcs,
 			std::vector<int> &lnbs, std::vector<int> &rnbs);
 		//read the graph file
-		void readGraph(Input const &graph_input);
+		void readGraph(ReadLibrary const &graph_input);
 		//process the given input file
-		void alignReads(Input const &library);
+		//void alignReads(Input const &library);
 		//process a batch of reads
-		std::vector<std::string> processBatch(
-			std::vector<Read> const &reads, int read_count);
+		//std::vector<std::string> processBatch(std::vector<Read> const &reads, int read_count);
 	public:
 		/*
 		 *	ctors

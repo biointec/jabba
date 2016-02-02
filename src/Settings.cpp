@@ -30,7 +30,6 @@
 #include <thread>
 
 Settings::Settings(int argc, char** args)
-       :graph_(FASTA, "DBGraph.fasta")
 {
 	// parse program arguments
 	if (argc < 4) {
@@ -57,7 +56,7 @@ Settings::Settings(int argc, char** args)
 	min_len_ = 20;
 	directory_ = "Jabba_output";
 	output_mode_ = LONG;
-
+        std::string graph_name = "DBGraph.fasta";
 	FileType file_type(FASTA);
 	// extract the other parameters
 	for (int i = 1; i < argc; i++) {
@@ -74,7 +73,8 @@ Settings::Settings(int argc, char** args)
 			num_threads_ = std::stoi(args[i]);
 		} else if (arg == "-g" || arg == "--graph") {
 			++i;
-			graph_ = Input(FASTA, args[i]);
+			graph_name = args[i];
+                        std::cout << graph_name << std::endl;
 		} else if (arg == "-k" || arg == "--dbgk") {
 			++i;
 			dbg_k_ = std::stoi(args[i]);
@@ -93,9 +93,16 @@ Settings::Settings(int argc, char** args)
 		} else if (arg == "-s" || arg == "--short") {
 			output_mode_ = SHORT;
 		} else {// filename
-			inputs_.push_back(Input(file_type, arg));
+                        std::string inputFilename = args[i];
+                        std::string outputFilename = "Jabba-" + inputFilename;
+                        ReadLibrary lib = ReadLibrary(inputFilename, outputFilename);
+                        libraries_.insert(lib);
 		}
 	}
+	//
+	std::cout << graph_name << std::endl;
+	graph_ = new ReadLibrary(graph_name, "");
+        std::cout << "done" << std::endl;
 	// try to create the output directory
 	#ifdef _MSC_VER
 	CreateDirectory(directory_.c_str(), NULL);
@@ -109,7 +116,7 @@ Settings::Settings(int argc, char** args)
 	logInstructions(argc, args);
 	//print settings
 	std::cout << "Max Number of Threads is " << num_threads_ << std::endl;
-	std::cout << "Graph is " << graph_.basename_ << std::endl;
+        std::cout << "Graph is " << graph_->getInputFilename() << std::endl;
 	std::cout << "DBG K is " << dbg_k_ << std::endl;
 	std::cout << "ESSA K is " << essa_k_ << std::endl;
 	std::cout << "Max Passes is " << max_passes_ << std::endl;

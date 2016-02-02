@@ -26,7 +26,7 @@
 #include "Settings.hpp"
 
 
-class Graph{
+class Graph {
 	private:
 		int size_; //number of nodes
 		int k_; //size of k-mers, overlap between nodes is k-1
