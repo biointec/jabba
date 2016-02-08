@@ -358,6 +358,8 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
         // open the read file
         ReadFile *readFile = input.allocateReadFile();
         readFile->open(input.getOutputFileName(), WRITE);
+        ReadFile *uncorrectedFile = input.allocateReadFile();
+        uncorrectedFile->open("uncorrected-" + input.getOutputFileName(), WRITE);
 
         while (true) {
                 // wait until the input thread has read a new block
@@ -394,11 +396,16 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
 
                 // write the idle read buffer (only this thread has access)
                 for (size_t i = 0; i < idlOutputBuffer->size(); i++)
-                        readFile->writeRecord((*idlOutputBuffer)[i]);
+                        if ((*idlOutputBuffer)[i].correction.length() > 0) {
+                                readFile->writeRecord((*idlOutputBuffer)[i]);
+                        } else {
+                                uncorrectedFile->writeRecord((*idlOutputBuffer)[i]);
+                        }
 
                 if (!readFile->good())
                         throw ios_base::failure("Cannot write to " + input.getOutputFileName());
-
+                if (!uncorrectedFile->good())
+                        throw ios_base::failure("Cannot write to uncorrected-" + input.getOutputFileName());
                 idlOutputBuffer->clear();
 
                 // if we need to start a new file: get out
@@ -408,6 +415,8 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
 
         readFile->close();
         delete readFile;
+        uncorrectedFile->close();
+        delete uncorrectedFile;
 }
 
 void LibraryContainer::inputThreadEntry()

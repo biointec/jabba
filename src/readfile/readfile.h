@@ -80,6 +80,7 @@ public:
         std::string preRead;    // everything in the record that precedes the read
         std::string read;       // read itself
         std::string postRead;   // everything in the record that procedes the read
+        std::string correction; // read correction
 
         size_t qualityOff;      // quality score offset within the record
 };
