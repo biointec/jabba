@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include "library.h"
-#include "tkmer.h"
 
 #include "readfile/fastafile.h"
 #include "readfile/fastqfile.h"
@@ -212,7 +211,7 @@ void RecordBlock::getRecordChunk(vector< ReadRecord >& buffer,
         for (size_t i = nextChunkOffset; i < recordBuffer.size(); i++) {
                 nextChunkOffset++;
                 buffer.push_back(recordBuffer[i]);
-                thisChunkSize += recordBuffer[i].getReadLength() + 1 - Kmer::getK();
+                thisChunkSize += recordBuffer[i].getReadLength();
                 if (thisChunkSize >= targetChunkSize)
                         break;
         }
@@ -232,7 +231,7 @@ void RecordBlock::getReadChunk(vector< string >& buffer,
         for (size_t i = nextChunkOffset; i < recordBuffer.size(); i++) {
                 nextChunkOffset++;
                 buffer.push_back(recordBuffer[i].getRead());
-                thisChunkSize += recordBuffer[i].getReadLength() + 1 - Kmer::getK();
+                thisChunkSize += recordBuffer[i].getReadLength();
                 if (thisChunkSize >= targetChunkSize)
                         break;
         }
@@ -409,10 +408,10 @@ void LibraryContainer::inputThreadLibrary(ReadLibrary& input)
                         totReadLength += record.getReadLength();
 
                         recordBuffer.push_back(record);
-                        thisBlockSize += record.getReadLength() + 1 - Kmer::getK();
+                        thisBlockSize += record.getReadLength();
 
                         // count the number of chunks in this block
-                        thisChunkSize += record.getReadLength() + 1 - Kmer::getK();
+                        thisChunkSize += record.getReadLength();
                         if (thisChunkSize >= targetChunkSize) {
                                 thisBlockNumChunks++;
                                 thisChunkSize = 0;

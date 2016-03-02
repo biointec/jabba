@@ -34,43 +34,43 @@
 typedef enum {LONG, SHORT} OutputMode;
 class Settings {
 private:
-	int num_threads_; //maximal number of threads
-	std::string directory_; //output directory
-	ReadLibrary *graph_; //graph file
-	int dbg_k_; //de Bruijn graph k-mer size
-	int essa_k_; //ESSA sparseness parameter
-	int max_passes_; //maximal number of passes
-	int min_len_; //minimal seed length
-	OutputMode output_mode_; //what kind of output should be generated
-	LibraryContainer libraries_; //libraries
-	
-	/*
-	 *	methods
-	 */
-	//print information about the program
-	void printProgramInfo() const;
-	//print usage instructions
-	void printUsage() const;
-	//log instructions to file
-	void logInstructions(int argc, char **args) const;
+        int num_threads_; //maximal number of threads
+        std::string directory_; //output directory
+        ReadLibrary *graph_; //graph file
+        int dbg_k_; //de Bruijn graph k-mer size
+        int essa_k_; //ESSA sparseness parameter
+        int max_passes_; //maximal number of passes
+        int min_len_; //minimal seed length
+        OutputMode output_mode_; //what kind of output should be generated
+        LibraryContainer libraries_; //libraries
+        
+        /*
+         *        methods
+         */
+        //print information about the program
+        void printProgramInfo() const;
+        //print usage instructions
+        void printUsage() const;
+        //log instructions to file
+        void logInstructions(int argc, char **args) const;
 public:
-	/*
-	 *	ctors
-	 */
+        /*
+         *        ctors
+         */
         Settings(int argc, char** args);
-	/*
-	 *	methods
-	 */
-	//gettres
-	int get_num_threads() const {return num_threads_;}
-	std::string get_directory() const {return directory_;}
-	ReadLibrary get_graph() const {return *graph_;}
-	int get_dbg_k() const {return dbg_k_;}
-	int get_essa_k() const {return essa_k_;}
-	int get_max_passes() const {return max_passes_;}
-	int get_min_len() const {return min_len_;}
-	OutputMode get_output_mode() const {return output_mode_;}
-	std::string getLogFilename() const;
+        /*
+         *        methods
+         */
+        //gettres
+        int get_num_threads() const {return num_threads_;}
+        std::string get_directory() const {return directory_;}
+        ReadLibrary get_graph() const {return *graph_;}
+        int get_dbg_k() const {return dbg_k_;}
+        int get_essa_k() const {return essa_k_;}
+        int get_max_passes() const {return max_passes_;}
+        int get_min_len() const {return min_len_;}
+        OutputMode get_output_mode() const {return output_mode_;}
+        std::string getLogFilename() const;
         /**
          * Get the IO block size in number of bases
          * @return The IO block size in number of bases

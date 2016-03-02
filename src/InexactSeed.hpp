@@ -26,27 +26,27 @@
 
 class InexactSeed{
 private:
-	std::vector<Seed> seeds_; //list of exact seeds that make this inexact seed
+        std::vector<Seed> seeds_; //list of exact seeds that make this inexact seed
 public:
-	/*
-	 *	ctors
-	 */
-	InexactSeed(std::vector<Seed> seeds) : seeds_(seeds){}
-	/*
-	 *	getters
-	 */
-	std::vector<Seed> get_seeds() const {return seeds_;}
-	int get_node() const {return seeds_[0].get_node();}
-	int get_node_start() const {return seeds_[0].get_ref_start();}
-	int get_node_end() const {return seeds_.back().get_ref_end();}
-	int get_read_start() const {return seeds_[0].get_read_start();}
-	int get_read_end() const {return seeds_.back().get_read_end();}
-	/*
-	 *	methods
-	 */
-	bool operator<(InexactSeed const &other) const {
-		return get_read_start() < other.get_read_start();
-	}
+        /*
+         *        ctors
+         */
+        InexactSeed(std::vector<Seed> seeds) : seeds_(seeds){}
+        /*
+         *        getters
+         */
+        std::vector<Seed> get_seeds() const {return seeds_;}
+        int get_node() const {return seeds_[0].get_node();}
+        int get_node_start() const {return seeds_[0].get_ref_start();}
+        int get_node_end() const {return seeds_.back().get_ref_end();}
+        int get_read_start() const {return seeds_[0].get_read_start();}
+        int get_read_end() const {return seeds_.back().get_read_end();}
+        /*
+         *        methods
+         */
+        bool operator<(InexactSeed const &other) const {
+                return get_read_start() < other.get_read_start();
+        }
 };
 
 #endif

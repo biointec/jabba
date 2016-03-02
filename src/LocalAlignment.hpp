@@ -24,41 +24,41 @@
 #include <string>
 
 class LocalAlignment {
-	int read_start_; //start of read
-	int read_end_; //end of read
-	int ref_start_; //start of ref
-	int ref_end_; //end of ref
-	std::vector<int> path_; //list of nodes
+        int read_start_; //start of read
+        int read_end_; //end of read
+        int ref_start_; //start of ref
+        int ref_end_; //end of ref
+        std::vector<int> path_; //list of nodes
 public:
-	/*
-	 *	methods
-	 */
-	//getters
-	int get_read_start() const {return read_start_;}
-	int get_read_end() const {return read_end_;}
-	int get_ref_start() const {return ref_start_;}
-	int get_ref_end() const {return ref_end_;}
-	std::vector<int> get_path() const {return path_;}
-	//setters
-	void set_read_start(int read_start) {read_start_ = read_start;}
-	void set_read_end(int read_end) {read_end_ = read_end;}
-	void set_ref_start(int ref_start) {ref_start_ = ref_start;}
-	void set_ref_end(int ref_end) {ref_end_ = ref_end;}
-	void set_path(std::vector<int> path) {path_ = path;}
-	
-	std::string to_string(int read_id) const {
-		std::string str = "Read " + std::to_string(read_id)
-			+ ": [" + std::to_string(read_start_)
-			+ ", " + std::to_string(read_end_) + "] "
-			+ " Ref: [" + std::to_string(ref_start_)
-			+ ", " + std::to_string(ref_end_) + "] ";
-		for (auto n : path_) {
-			str += std::to_string(n) + " ";
-		}
-		return str;
-	}
-	bool overlapsOnRead(const LocalAlignment &la) const {
-		return read_start_ < la.get_read_end() && la.get_read_start() < read_end_;
-	}
+        /*
+         *        methods
+         */
+        //getters
+        int get_read_start() const {return read_start_;}
+        int get_read_end() const {return read_end_;}
+        int get_ref_start() const {return ref_start_;}
+        int get_ref_end() const {return ref_end_;}
+        std::vector<int> get_path() const {return path_;}
+        //setters
+        void set_read_start(int read_start) {read_start_ = read_start;}
+        void set_read_end(int read_end) {read_end_ = read_end;}
+        void set_ref_start(int ref_start) {ref_start_ = ref_start;}
+        void set_ref_end(int ref_end) {ref_end_ = ref_end;}
+        void set_path(std::vector<int> path) {path_ = path;}
+        
+        std::string to_string(int read_id) const {
+                std::string str = "Read " + std::to_string(read_id)
+                        + ": [" + std::to_string(read_start_)
+                        + ", " + std::to_string(read_end_) + "] "
+                        + " Ref: [" + std::to_string(ref_start_)
+                        + ", " + std::to_string(ref_end_) + "] ";
+                for (auto n : path_) {
+                        str += std::to_string(n) + " ";
+                }
+                return str;
+        }
+        bool overlapsOnRead(const LocalAlignment &la) const {
+                return read_start_ < la.get_read_end() && la.get_read_start() < read_end_;
+        }
 };
 #endif

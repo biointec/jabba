@@ -22,69 +22,69 @@
 #include "Read.hpp"
 #include "Input.hpp"
 
-void ReadLibrary::getNextFromFasta(std::string &meta, std::string &read){
-	meta = next_meta_;
-	read = "";
-	std::string partial_read;
-	if(library_){
-		getline(library_, partial_read);
-	}
-	while(library_ && (partial_read.size() == 0 || partial_read[0] != '>')){
-		read += partial_read;
-		getline(library_, partial_read);
-	}
-	next_meta_ = partial_read;
+void ReadLibrary::getNextFromFasta(std::string &meta, std::string &read) {
+        meta = next_meta_;
+        read = "";
+        std::string partial_read;
+        if (library_) {
+                getline(library_, partial_read);
+        }
+        while (library_ && (partial_read.size() == 0 || partial_read[0] != '>')) {
+                read += partial_read;
+                getline(library_, partial_read);
+        }
+        next_meta_ = partial_read;
 }
 
-void ReadLibrary::getNextFromFastq(std::string &meta, std::string &read){
-	meta = next_meta_;
-	std::string partial_read;
-	if(library_){
-		//this is the actual read
-		getline(library_, read);
-	}
-	for(int i = 0; i < 3; ++i){
-		if(library_){
-			getline(library_, next_meta_);
-		} else {
-			//end of file reached
-			next_meta_ = "";
-		}
-	}
+void ReadLibrary::getNextFromFastq(std::string &meta, std::string &read) {
+        meta = next_meta_;
+        std::string partial_read;
+        if (library_) {
+                //this is the actual read
+                getline(library_, read);
+        }
+        for (int i = 0; i < 3; ++i) {
+                if (library_) {
+                        getline(library_, next_meta_);
+                } else {
+                        //end of file reached
+                        next_meta_ = "";
+                }
+        }
 }
 
 ReadLibrary::ReadLibrary(Input const &library)
 {
-	open(library);
+        open(library);
 }
 
 void ReadLibrary::open(Input const &library) {
-	library_.open(library.filename_);
-	//set which function should be used to read the next line
-	if (library.file_type_ == FASTQ) {
-		getNextRead = &ReadLibrary::getNextFromFastq;
-		if(library_){
-			getline(library_, next_meta_);
-		}
-	} else if (library.file_type_ == FASTA) {
-		getNextRead = &ReadLibrary::getNextFromFasta;
-		while(library_ && (next_meta_.size() == 0 || next_meta_[0] != '>')){
-			getline(library_, next_meta_);
-		}
-	} else {
-		exit(1);
-	}
+        library_.open(library.filename_);
+        //set which function should be used to read the next line
+        if (library.file_type_ == FASTQ) {
+                getNextRead = &ReadLibrary::getNextFromFastq;
+                if (library_) {
+                        getline(library_, next_meta_);
+                }
+        } else if (library.file_type_ == FASTA) {
+                getNextRead = &ReadLibrary::getNextFromFasta;
+                while (library_ && (next_meta_.size() == 0 || next_meta_[0] != '>')) {
+                        getline(library_, next_meta_);
+                }
+        } else {
+                exit(1);
+        }
 }
 
 
 
-void ReadLibrary::getReadBatch(std::vector<Read> &batch, int const &batch_size){
-	for(int i = 0; i < batch_size && library_; ++i){
-		std::string meta;
-		std::string seq;
-		(this->*getNextRead)(meta, seq);
-		meta = meta.substr(1);
-		Read read(meta, seq);
-		batch.push_back(read);
-	}
+void ReadLibrary::getReadBatch(std::vector<Read> &batch, int const &batch_size) {
+        for (int i = 0; i < batch_size && library_; ++i) {
+                std::string meta;
+                std::string seq;
+                (this->*getNextRead)(meta, seq);
+                meta = meta.substr(1);
+                Read read(meta, seq);
+                batch.push_back(read);
+        }
 }

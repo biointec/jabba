@@ -24,52 +24,52 @@
 
 class TNode {
 private:
-	int id_;			//node ID
-	int size_;			//size
-	//TString sequence_;		//DNA sequence of the node
-	//TString rc_sequence_;		//DNA sequence of the rc node
-	std::vector<int> in_edges_;	//edges that enter the node
-	std::vector<int> out_edges_;	//edges that leave the node
+        int id_;                        //node ID
+        int size_;                        //size
+        //TString sequence_;                //DNA sequence of the node
+        //TString rc_sequence_;                //DNA sequence of the rc node
+        std::vector<int> in_edges_;        //edges that enter the node
+        std::vector<int> out_edges_;        //edges that leave the node
 public:
-	/*
-	 *	ctors
-	 */
-	TNode(std::string const &sequence, int const &id, int const &size)
-	      :	id_(id),
-		size_(size)
-	{}
-	TNode(std::string const &sequence, int const &id, int const &size,
-		 std::vector<int> const &in_edges, 
-		 std::vector<int> const &out_edges)
-	      :	id_(id),
-		size_(size),
-		in_edges_(in_edges),
-		out_edges_(out_edges)
-	{}
-	TNode(TNode const &tnode)
-	      :	id_(tnode.get_id()),
-		size_(tnode.size()),
-		in_edges_(tnode.get_in_edges()),
-		out_edges_(tnode.get_out_edges())
-	{}
-	/*
-	 *	methods
-	 */
-	//static function that negates a list of nodes
-	static std::vector<int> reverseEdges(std::vector<int> edge_list) {
-		for (int i = 0; i < edge_list.size(); ++i) {
-			edge_list[i] = -edge_list[i];
-		}
-		return edge_list;
-	}
-	//getters
-	int get_id() const {return id_;}
-	std::vector<int> get_in_edges() const {return in_edges_;}
-	std::vector<int> get_rc_in_edges() const {return reverseEdges(out_edges_);}
-	std::vector<int> get_out_edges() const {return out_edges_;}
-	std::vector<int> get_rc_out_edges() const {return reverseEdges(in_edges_);}
-	
-	int size() const {return size_;};
+        /*
+         *        ctors
+         */
+        TNode(std::string const &sequence, int const &id, int const &size)
+              :        id_(id),
+                size_(size)
+        {}
+        TNode(std::string const &sequence, int const &id, int const &size,
+                 std::vector<int> const &in_edges, 
+                 std::vector<int> const &out_edges)
+              :        id_(id),
+                size_(size),
+                in_edges_(in_edges),
+                out_edges_(out_edges)
+        {}
+        TNode(TNode const &tnode)
+              :        id_(tnode.get_id()),
+                size_(tnode.size()),
+                in_edges_(tnode.get_in_edges()),
+                out_edges_(tnode.get_out_edges())
+        {}
+        /*
+         *        methods
+         */
+        //static function that negates a list of nodes
+        static std::vector<int> reverseEdges(std::vector<int> edge_list) {
+                for (int i = 0; i < edge_list.size(); ++i) {
+                        edge_list[i] = -edge_list[i];
+                }
+                return edge_list;
+        }
+        //getters
+        int get_id() const {return id_;}
+        std::vector<int> get_in_edges() const {return in_edges_;}
+        std::vector<int> get_rc_in_edges() const {return reverseEdges(out_edges_);}
+        std::vector<int> get_out_edges() const {return out_edges_;}
+        std::vector<int> get_rc_out_edges() const {return reverseEdges(in_edges_);}
+        
+        int size() const {return size_;};
 };
 
 #endif

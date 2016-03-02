@@ -22,34 +22,32 @@
 
 #include <string>
 
-// typedef enum {FASTQ, FASTA, FASTQ_GZ, FASTA_GZ, SAM, SAM_GZ, BAM, RAW, RAW_GZ}
-// 	FileType;
 std::ostream &operator<<(std::ostream &out, const FileType &fileType);
 
 struct Input {
-	FileType file_type_;
-	std::string basename_; //is required when file is in another folder
-	std::string filename_;
-	
-	Input(FileType file_type, std::string basename)
-	 :  file_type_(file_type),
-		basename_(),
-		filename_(basename)
-	{
-		basename_ = parseBasename(filename_);
-	}
-	static std::string parseBasename(std::string const &filename) {
-		std::string basename;
-		size_t location = filename.find_last_of('/');
-		if(location != filename.npos) {
-			//was found so get substring from there!
-			basename = filename.substr(location + 1);
-		} else {
-			//not found, relative filename, just copy to basename
-			basename = filename;
-		}
-		return basename;
-	}
+        FileType file_type_;
+        std::string basename_; //is required when file is in another folder
+        std::string filename_;
+        
+        Input(FileType file_type, std::string basename)
+         :  file_type_(file_type),
+                basename_(),
+                filename_(basename)
+        {
+                basename_ = parseBasename(filename_);
+        }
+        static std::string parseBasename(std::string const &filename) {
+                std::string basename;
+                size_t location = filename.find_last_of('/');
+                if (location != filename.npos) {
+                        //was found so get substring from there!
+                        basename = filename.substr(location + 1);
+                } else {
+                        //not found, relative filename, just copy to basename
+                        basename = filename;
+                }
+                return basename;
+        }
 };
 
 #endif

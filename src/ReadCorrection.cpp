@@ -17,6 +17,7 @@ void ReadCorrection::correctRead(ReadRecord& record)
 
 void ReadCorrection::correctChunk(vector<ReadRecord>& readChunk)
 {
-        for (auto& it : readChunk)
+        for (auto& it : readChunk) {
                 correctRead(it);
+        }
 }

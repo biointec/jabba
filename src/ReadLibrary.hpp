@@ -28,19 +28,19 @@ class Read;
 class Input;
 
 class ReadLibrary{
-	private:
-		std::ifstream library_;
-		std::string next_meta_;
-		void (ReadLibrary:: *getNextRead) (std::string &, std::string &);
-		void getNextFromFasta(std::string &meta, std::string &read);
-		void getNextFromFastq(std::string &meta, std::string &read);
-	public:
-		ReadLibrary(){}
-		ReadLibrary(Input const &library);
-		void open(Input const &library);
-		bool is_open() {return library_.is_open();}
-		bool has_next() {return library_;}
-		void close() {library_.close();}
-		void getReadBatch(std::vector<Read> &batch, int const &batch_size);
+        private:
+                std::ifstream library_;
+                std::string next_meta_;
+                void (ReadLibrary:: *getNextRead) (std::string &, std::string &);
+                void getNextFromFasta(std::string &meta, std::string &read);
+                void getNextFromFastq(std::string &meta, std::string &read);
+        public:
+                ReadLibrary(){}
+                ReadLibrary(Input const &library);
+                void open(Input const &library);
+                bool is_open() {return library_.is_open();}
+                bool has_next() {return library_;}
+                void close() {library_.close();}
+                void getReadBatch(std::vector<Read> &batch, int const &batch_size);
 };
 #endif

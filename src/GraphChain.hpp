@@ -26,31 +26,31 @@
 #include "library.h"
 
 class GraphChain {
-	private:
-		Settings settings_; //settings
-		Graph graph_; //contains the de Bruijn graph
-		/*
-		 *	methods
-		 */
-		//extract the neighbours from the graph file
-		void extractNbs(std::string const &arcs,
-			std::vector<int> &lnbs, std::vector<int> &rnbs);
-		//read the graph file
-		void readGraph(ReadLibrary const &graph_input);
-		//process the given input file
-		//void alignReads(Input const &library);
-		//process a batch of reads
-		//std::vector<std::string> processBatch(std::vector<Read> const &reads, int read_count);
-	public:
-		/*
-		 *	ctors
-		 */
-		GraphChain(int argc, char ** argv);
-		/*
-		 *	methods
-		 */
-		//process all input files
-		void alignReads();
+        private:
+                Settings settings_; //settings
+                Graph graph_; //contains the de Bruijn graph
+                /*
+                 *        methods
+                 */
+                //extract the neighbours from the graph file
+                void extractNbs(std::string const &arcs,
+                        std::vector<int> &lnbs, std::vector<int> &rnbs);
+                //read the graph file
+                void readGraph(ReadLibrary const &graph_input);
+                //process the given input file
+                //void alignReads(Input const &library);
+                //process a batch of reads
+                //std::vector<std::string> processBatch(std::vector<Read> const &reads, int read_count);
+        public:
+                /*
+                 *        ctors
+                 */
+                GraphChain(int argc, char ** argv);
+                /*
+                 *        methods
+                 */
+                //process all input files
+                void alignReads();
 };
 
 #endif

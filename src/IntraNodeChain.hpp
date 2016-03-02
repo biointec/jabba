@@ -28,31 +28,31 @@ class Read;
 class Settings;
 
 class IntraNodeChain{
-	private:
-		Settings const &settings_; //reference to settings
-		std::vector<Seed> &seeds_; //reference to seeds
-		int maximal_coverage_; //current highest coverage of node by a chain
-		double min_cov_coef_; //used to determine required exact coverage
-		/*
-		 *	methods
-		 */
-		//check if seed fits
-		bool checkFit(Seed const &prev, Seed const &next);
-		bool checkFit(int const &ref_dist, int const &read_dist);
-		//try to fit all seeds and extend a chain
-		void fitAndExtend(std::vector<std::vector<Seed>> &consecutive_seeds,
-			std::vector<int> &chain_coverage, Seed const &seed);
-	public:
-		/*
-		 *	ctors
-		 */
-		IntraNodeChain(std::vector<Seed> &seeds,
-			Settings const &settings);
-		/*
-		 *	methods
-		 */
-		//group the seeds in a node
-		void groupSeedsInNode(std::vector<InexactSeed> &inexact_seeds);
+        private:
+                Settings const &settings_; //reference to settings
+                std::vector<Seed> &seeds_; //reference to seeds
+                int maximal_coverage_; //current highest coverage of node by a chain
+                double min_cov_coef_; //used to determine required exact coverage
+                /*
+                 *        methods
+                 */
+                //check if seed fits
+                bool checkFit(Seed const &prev, Seed const &next);
+                bool checkFit(int const &ref_dist, int const &read_dist);
+                //try to fit all seeds and extend a chain
+                void fitAndExtend(std::vector<std::vector<Seed>> &consecutive_seeds,
+                        std::vector<int> &chain_coverage, Seed const &seed);
+        public:
+                /*
+                 *        ctors
+                 */
+                IntraNodeChain(std::vector<Seed> &seeds,
+                        Settings const &settings);
+                /*
+                 *        methods
+                 */
+                //group the seeds in a node
+                void groupSeedsInNode(std::vector<InexactSeed> &inexact_seeds);
 };
 
 #endif

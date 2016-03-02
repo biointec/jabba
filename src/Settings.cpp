@@ -31,152 +31,160 @@
 
 Settings::Settings(int argc, char** args)
 {
-	// parse program arguments
-	if (argc < 4) {
-		if (argc == 1) {
-			printProgramInfo();
-		} else {
-			std::string arg = args[1];
-			if (arg == "-h" || arg == "--help") {
-				printUsage();
-				exit(EXIT_SUCCESS);
-			} else if (arg == "-i" || arg == "--info") {
-				printProgramInfo();
-				exit(EXIT_SUCCESS);
-			}
-		}
-		printUsage();
-		exit(EXIT_FAILURE);
-	}
+        // parse program arguments
+        if (argc < 4) {
+                if (argc == 1) {
+                        printProgramInfo();
+                } else {
+                        std::string arg = args[1];
+                        if (arg == "-h" || arg == "--help") {
+                                printUsage();
+                                exit(EXIT_SUCCESS);
+                        } else if (arg == "-i" || arg == "--info") {
+                                printProgramInfo();
+                                exit(EXIT_SUCCESS);
+                        }
+                }
+                printUsage();
+                exit(EXIT_FAILURE);
+        }
 
-	//set standard values
-	num_threads_ = std::thread::hardware_concurrency();
-	essa_k_ = 1;
-	max_passes_ = 2;
-	min_len_ = 20;
-	directory_ = "Jabba_output";
-	output_mode_ = LONG;
+        //set standard values
+        num_threads_ = std::thread::hardware_concurrency();
+        essa_k_ = 1;
+        max_passes_ = 2;
+        min_len_ = 20;
+        directory_ = "Jabba_output";
+        output_mode_ = SHORT;
         std::string graph_name = "DBGraph.fasta";
-	FileType file_type(FASTA);
-	// extract the other parameters
-	for (int i = 1; i < argc; i++) {
-		std::string arg(args[i]);
-		if (arg.empty()) continue;// this shouldn't happen
-		if (arg == "-fastq") { // file type
-			std::cout << "FileType is fastq." << std::endl;
-			file_type = FASTQ;
- 		} else if (arg == "-fasta") {
-			std::cout << "FileType is fasta." << std::endl;
-			file_type = FASTA;
-		} else if (arg == "-t" || arg == "--threads") {
-			++i;
-			num_threads_ = std::stoi(args[i]);
-		} else if (arg == "-g" || arg == "--graph") {
-			++i;
-			graph_name = args[i];
+        FileType file_type(FASTA);
+        // extract the other parameters
+        for (int i = 1; i < argc; i++) {
+                std::string arg(args[i]);
+                if (arg.empty()) continue;// this shouldn't happen
+                if (arg == "-fastq") { // file type
+                        std::cout << "FileType is fastq." << std::endl;
+                        file_type = FASTQ;
+                 } else if (arg == "-fasta") {
+                        std::cout << "FileType is fasta." << std::endl;
+                        file_type = FASTA;
+                } else if (arg == "-t" || arg == "--threads") {
+                        ++i;
+                        num_threads_ = std::stoi(args[i]);
+                } else if (arg == "-g" || arg == "--graph") {
+                        ++i;
+                        graph_name = args[i];
                         std::cout << graph_name << std::endl;
-		} else if (arg == "-k" || arg == "--dbgk") {
-			++i;
-			dbg_k_ = std::stoi(args[i]);
-		} else if (arg == "-e" || arg == "--essak") {
-			++i;
-			essa_k_ = std::stoi(args[i]);
-		} else if (arg == "-p" || arg == "--passes") {
-			++i;
-			max_passes_ = std::stoi(args[i]);
-		} else if (arg == "-l" || arg == "--length") {
-			++i;
-			min_len_ = std::stoi(args[i]);
-		} else if (arg == "-o" || arg == "--output") {
-			++i;
-			directory_ = args[i];
-		} else if (arg == "-s" || arg == "--short") {
-			output_mode_ = SHORT;
-		} else {// filename
+                } else if (arg == "-k" || arg == "--dbgk") {
+                        ++i;
+                        dbg_k_ = std::stoi(args[i]);
+                } else if (arg == "-e" || arg == "--essak") {
+                        ++i;
+                        essa_k_ = std::stoi(args[i]);
+                } else if (arg == "-p" || arg == "--passes") {
+                        ++i;
+                        max_passes_ = std::stoi(args[i]);
+                } else if (arg == "-l" || arg == "--length") {
+                        ++i;
+                        min_len_ = std::stoi(args[i]);
+                } else if (arg == "-o" || arg == "--output") {
+                        ++i;
+                        directory_ = args[i];
+                } else if (arg == "-s" || arg == "--short") {
+                        std::cerr << "-s --short is deprecated, short is now the default output mode.\n";
+                        output_mode_ = SHORT;
+                } else if (arg == "-m" || arg == "--outputmode") {
+                        ++i;
+                        if (args[i] == "short") {
+                                output_mode_ = SHORT;
+                        } else if (args[i] == "long") {
+                                output_mode_ = LONG;
+                        }
+                } else {// filename
                         std::string inputFilename = args[i];
                         std::string outputFilename = "Jabba-" + inputFilename;
                         ReadLibrary lib = ReadLibrary(inputFilename, outputFilename);
                         libraries_.insert(lib);
-		}
-	}
-	//
-	std::cout << graph_name << std::endl;
-	graph_ = new ReadLibrary(graph_name, "");
+                }
+        }
+        //
+        std::cout << graph_name << std::endl;
+        graph_ = new ReadLibrary(graph_name, "");
         std::cout << "done" << std::endl;
-	// try to create the output directory
-	#ifdef _MSC_VER
-	CreateDirectory(directory_.c_str(), NULL);
-	#else
-	DIR * dir = opendir(directory_.c_str());
-	if ((dir == NULL) && (mkdir(directory_.c_str(), 0777) != 0))
-		throw std::ios_base::failure("Can't create directory: " + directory_);
-	closedir(dir);
-	#endif
-	// log the instructions
-	logInstructions(argc, args);
-	//print settings
-	std::cout << "Max Number of Threads is " << num_threads_ << std::endl;
+        // try to create the output directory
+        #ifdef _MSC_VER
+        CreateDirectory(directory_.c_str(), NULL);
+        #else
+        DIR * dir = opendir(directory_.c_str());
+        if ((dir == NULL) && (mkdir(directory_.c_str(), 0777) != 0))
+                throw std::ios_base::failure("Can't create directory: " + directory_);
+        closedir(dir);
+        #endif
+        // log the instructions
+        logInstructions(argc, args);
+        //print settings
+        std::cout << "Max Number of Threads is " << num_threads_ << std::endl;
         std::cout << "Graph is " << graph_->getInputFilename() << std::endl;
-	std::cout << "DBG K is " << dbg_k_ << std::endl;
-	std::cout << "ESSA K is " << essa_k_ << std::endl;
-	std::cout << "Max Passes is " << max_passes_ << std::endl;
-	std::cout << "Min Seed Size is " << min_len_ << std::endl;
-	std::cout << "Output Directory is " << directory_ << std::endl;
-	std::cout << "Output Mode is ";
-	if (output_mode_ == SHORT){
-		std::cout << "short" << std::endl;
-	} else if (output_mode_ == LONG){
-		std::cout << "long" << std::endl;
-	} else {
-		std::cout << "not implemented" << std::endl;
-	}
+        std::cout << "DBG K is " << dbg_k_ << std::endl;
+        std::cout << "ESSA K is " << essa_k_ << std::endl;
+        std::cout << "Max Passes is " << max_passes_ << std::endl;
+        std::cout << "Min Seed Size is " << min_len_ << std::endl;
+        std::cout << "Output Directory is " << directory_ << std::endl;
+        std::cout << "Output Mode is ";
+        if (output_mode_ == SHORT){
+                std::cout << "short" << std::endl;
+        } else if (output_mode_ == LONG){
+                std::cout << "long" << std::endl;
+        } else {
+                std::cout << "not implemented" << std::endl;
+        }
 }
 
 void Settings::printProgramInfo() const {
-	std::cout << "Jabba: Hybrid Error Correction." << std::endl;
-	std::cout << "Jabba v." << JABBA_MAJOR_VERSION << "."
-	     << JABBA_MINOR_VERSION << "." << JABBA_PATCH_LEVEL << "\n";
-	std::cout << "Copyright 2014, 2015 Giles Miclotte (giles.miclotte@intec.ugent.be)\n";
-	std::cout << "This is free software; see the source for copying conditions. "
-		"There is NO\nwarranty; not even for MERCHANTABILITY or "
-		"FITNESS FOR A PARTICULAR PURPOSE.\n" << std::endl;
-	std::cout << std::endl;
+        std::cout << "Jabba: Hybrid Error Correction." << std::endl;
+        std::cout << "Jabba v." << JABBA_MAJOR_VERSION << "."
+             << JABBA_MINOR_VERSION << "." << JABBA_PATCH_LEVEL << "\n";
+        std::cout << "Copyright 2014, 2015 Giles Miclotte (giles.miclotte@intec.ugent.be)\n";
+        std::cout << "This is free software; see the source for copying conditions. "
+                "There is NO\nwarranty; not even for MERCHANTABILITY or "
+                "FITNESS FOR A PARTICULAR PURPOSE.\n" << std::endl;
+        std::cout << std::endl;
 }
 
 void Settings::printUsage() const {
-	std::cout << "Usage: Jabba [options] [file_options] file1 [[file_options] file2]...\n";
-	std::cout << "Corrects sequence reads in file(s)\n\n";
-	std::cout << " [options]\n";
-	std::cout << "  -h\t--help\t\tdisplay help page\n";
-	std::cout << "  -i\t--info\t\tdisplay information page\n";
-	std::cout << " [options arg]\n";
-	std::cout << "  -l\t--length\tminimal seed size [default = 20]\n";
-	std::cout << "  -k\t--dbgk\t\tde Bruijn graph k-mer size\n";
-	std::cout << "  -e\t--essak\t\tsparseness factor of the enhance suffix array [default = 1]\n";
-	std::cout << "  -t\t--threads\tnumber of threads [default = available cores]\n";
-	std::cout << "  -p\t--passes\tmaximal number of passes per read [default = 2]\n";
-	std::cout << "  -s\t--short\tdo not extend the reads\n";
-	std::cout << " [file_options file_name]\n";
-	std::cout << "  -o\t--output\toutput directory [default = Jabba_output]\n";
-	std::cout << "  -fastq\t\tfastq input files\n";
-	std::cout << "  -fasta\t\tfasta input files\n";
-	std::cout << "  -g\t--graph\t\tgraph input file [default = DBGraph.fasta]\n\n";
-	std::cout << " examples:\n";
-	std::cout << "  ./Jabba --dbgk 31 --graph DBGraph.txt -fastq reads.fastq\n";
-	std::cout << "  ./Jabba -o Jabba -l 20 -k 31 -p 2 -e 12 -g DBGraph.txt -fastq reads.fastq\n";
+        std::cout << "Usage: Jabba [options] [file_options] file1 [[file_options] file2]...\n";
+        std::cout << "Corrects sequence reads in file(s)\n\n";
+        std::cout << " [options]\n";
+        std::cout << "  -h\t--help\t\tdisplay help page\n";
+        std::cout << "  -i\t--info\t\tdisplay information page\n";
+        std::cout << " [options arg]\n";
+        std::cout << "  -l\t--length\tminimal seed size [default = 20]\n";
+        std::cout << "  -k\t--dbgk\t\tde Bruijn graph k-mer size\n";
+        std::cout << "  -e\t--essak\t\tsparseness factor of the enhance suffix array [default = 1]\n";
+        std::cout << "  -t\t--threads\tnumber of threads [default = available cores]\n";
+        std::cout << "  -p\t--passes\tmaximal number of passes per read [default = 2]\n";
+        std::cout << "  -m\t--outputmode\tshort (do not extend the reads) or long (maximally extend reads) [default = short]\n";
+        std::cout << " [file_options file_name]\n";
+        std::cout << "  -o\t--output\toutput directory [default = Jabba_output]\n";
+        std::cout << "  -fastq\t\tfastq input files\n";
+        std::cout << "  -fasta\t\tfasta input files\n";
+        std::cout << "  -g\t--graph\t\tgraph input file [default = DBGraph.fasta]\n\n";
+        std::cout << " examples:\n";
+        std::cout << "  ./Jabba --dbgk 31 --graph DBGraph.txt -fastq reads.fastq\n";
+        std::cout << "  ./Jabba -o Jabba -l 20 -k 31 -p 2 -e 12 -g DBGraph.txt -fastq reads.fastq\n";
 }
 
 std::string Settings::getLogFilename() const {
-	return directory_ + "/log";
+        return directory_ + "/log";
 }
 
 void Settings::logInstructions(int argc, char **args) const {
-	std::ofstream logFile;
-	logFile.open(getLogFilename().c_str());
-	if (!logFile)
-		throw std::ios_base::failure("Can't write to " + getLogFilename());
-	for (int i = 0; i < argc; i++)
-		logFile << " " << args[i];
-	logFile << std::endl;
-	logFile.close();
+        std::ofstream logFile;
+        logFile.open(getLogFilename().c_str());
+        if (!logFile)
+                throw std::ios_base::failure("Can't write to " + getLogFilename());
+        for (int i = 0; i < argc; i++)
+                logFile << " " << args[i];
+        logFile << std::endl;
+        logFile.close();
 }

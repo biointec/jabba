@@ -32,41 +32,41 @@ class Graph;
 
 struct AlignedRead {
 
-	Read &read_; //reference to the read
-	std::vector<LocalAlignment> local_alignments_; //list of alignments
-	OutputMode output_mode_;
+        Read &read_; //reference to the read
+        std::vector<LocalAlignment> local_alignments_; //list of alignments
+        OutputMode output_mode_;
 
 public:
-	/*
-	 *	ctors
-	 */
-	AlignedRead(Read &read, OutputMode output_mode);
-	/*
-	 *	methods
-	 */
-	//getters
-	std::vector<LocalAlignment> get_local_alignments() {return local_alignments_;}
-	//setters
-	void set_local_alignments(std::vector<LocalAlignment> local_alignments) {local_alignments_ = local_alignments;}
-	//get a list of all regions that have not been corrected
-	std::vector<std::pair<int, int>> not_corrected();
-	//add a list of local alignments
-	void correct(std::vector<LocalAlignment> const &als);
-	//add a local alignment
-	void correct(LocalAlignment const &al);
-	//correct the read based on the longest local alignment
-	void getCorrectedRead(Graph const &graph,
-		std::vector<std::string> &corrections);
-	//sort local_alignments_
-	void sortAlongRead();
-	void sortReadCov();
-	//checks if laj extends lai, overlap ends at index
-	bool fit(std::vector<int>::iterator const &index,
-		std::vector<int> const &lai, std::vector<int> const & laj);
-	//merge local alignments
-	bool merge();
-	//print all local alignments
-	void print();
+        /*
+         * ctors
+         */
+        AlignedRead(Read &read, OutputMode output_mode);
+        /*
+         * methods
+         */
+        //getters
+        std::vector<LocalAlignment> get_local_alignments() {return local_alignments_;}
+        //setters
+        void set_local_alignments(std::vector<LocalAlignment> local_alignments) {local_alignments_ = local_alignments;}
+        //get a list of all regions that have not been corrected
+        std::vector<std::pair<int, int>> not_corrected();
+        //add a list of local alignments
+        void correct(std::vector<LocalAlignment> const &als);
+        //add a local alignment
+        void correct(LocalAlignment const &al);
+        //correct the read based on the longest local alignment
+        void getCorrectedRead(Graph const &graph,
+                std::vector<std::string> &corrections);
+        //sort local_alignments_
+        void sortAlongRead();
+        void sortReadCov();
+        //checks if laj extends lai, overlap ends at index
+        bool fit(std::vector<int>::iterator const &index,
+                std::vector<int> const &lai, std::vector<int> const & laj);
+        //merge local alignments
+        bool merge();
+        //print all local alignments
+        void print();
 };
 
 #endif
