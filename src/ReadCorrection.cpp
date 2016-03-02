@@ -12,7 +12,7 @@ void ReadCorrection::correctRead(ReadRecord& record)
         Alignment alignment(250, 30, 1, -4, -2, -3);
         InterNodeChain iernc(read, graph_, settings_, alignment);
         AlignedRead ar(read, settings_.get_output_mode());
-        record.read = iernc.chainSeeds(ar);
+        record.correction = iernc.chainSeeds(ar);
 }
 
 void ReadCorrection::correctChunk(vector<ReadRecord>& readChunk)

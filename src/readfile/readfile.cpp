@@ -108,3 +108,15 @@ void ReadFile::writeRecord(const ReadRecord& record)
         rfHandler->writeLine(record.read);
         rfHandler->writeLine(record.postRead);
 }
+
+void ReadFile::writeCorrectedRecord(const ReadRecord& record)
+{
+        rfHandler->writeLine(record.preRead);
+        rfHandler->writeLine(record.correction);
+        rfHandler->writeLine(record.postRead);
+}
+
+void ReadFile::writeUncorrectedRecord(const ReadRecord& record)
+{
+        writeRecord(record);
+}

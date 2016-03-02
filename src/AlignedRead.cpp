@@ -140,7 +140,7 @@ std::string AlignedRead::getCorrectedRead(Graph const &graph) {
 	}
 	int max_cov = 0;
 	LocalAlignment best_la;
-	for (auto la : local_alignments_) {
+	for (auto &la : local_alignments_) {
 		int cov = la.get_read_end() - la.get_read_start();
 		if (cov > max_cov) {
 			max_cov = cov;

@@ -466,6 +466,8 @@ public:
          * @param record Record to write
          */
         virtual void writeRecord(const ReadRecord& record);
+        virtual void writeCorrectedRecord(const ReadRecord& record);
+        virtual void writeUncorrectedRecord(const ReadRecord& record);
 };
 
 #endif

@@ -397,9 +397,9 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
                 // write the idle read buffer (only this thread has access)
                 for (size_t i = 0; i < idlOutputBuffer->size(); i++)
                         if ((*idlOutputBuffer)[i].correction.length() > 0) {
-                                readFile->writeRecord((*idlOutputBuffer)[i]);
+                                readFile->writeCorrectedRecord((*idlOutputBuffer)[i]);
                         } else {
-                                uncorrectedFile->writeRecord((*idlOutputBuffer)[i]);
+                                uncorrectedFile->writeUncorrectedRecord((*idlOutputBuffer)[i]);
                         }
 
                 if (!readFile->good())
