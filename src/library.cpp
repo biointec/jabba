@@ -1,6 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2014, 2015 Jan Fostier (jan.fostier@intec.ugent.be)     *
- *   Copyright (C) 2014, 2015 Mahdi Heydari (mahdi.heydari@intec.ugent.be) *
+ *   Copyright (C) 2014 - 2016 Jan Fostier (jan.fostier@intec.ugent.be)    *
  *   This file is part of Brownie                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,7 +19,6 @@
  ***************************************************************************/
 
 #include "library.h"
-
 #include "tkmer.h"
 
 #include "readfile/fastafile.h"
@@ -71,6 +69,27 @@ std::ostream &operator<<(std::ostream &out, const FileType &fileType) {
         }
 
         return out;
+}
+
+void ReadLibrary::readMetadata(const string& path)
+{
+        ifstream ifs((path + inputFilename + ".met").c_str());
+        if (!ifs.good())
+                return;
+        string line, tmp;
+        getline(ifs, line);
+        stringstream(line) >> tmp >> tmp >> tmp >> numReads;
+        getline(ifs, line);
+        stringstream(line) >> tmp >> tmp >> tmp >> avgReadLength;
+        ifs.close();
+}
+
+void ReadLibrary::writeMetadata(const string& path) const
+{
+        ofstream ofs((path + inputFilename + ".met").c_str());
+        ofs << "Number of reads: " << numReads << "\n"
+            << "Average read length: " << avgReadLength << endl;
+        ofs.close();
 }
 
 // ============================================================================
@@ -130,13 +149,13 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
         }
 
         if (fileType == UNKNOWN_FT) {
-                cerr << "Jabba can not open the following file: '" << inputFilename << "'\n";
+                cerr << "Brownie: don't know how to open file: '" << inputFilename << "'\n";
                 cerr << "Expected one of the following extensions: .fastq, .fasta, .sam, .raw (or .gz variants thereof)\n";
                 exit(EXIT_FAILURE);
         }
 
         if (!Util::fileExists(inputFilename)) {
-                cerr << "Jabba can not open the following file: '" << inputFilename << "'\n";
+                cerr << "Brownie: cannot open input read file: '" << inputFilename << "'\n";
                 cerr << "Exiting... " << endl;
                 exit(EXIT_FAILURE);
         }
@@ -173,43 +192,130 @@ ReadFile* ReadLibrary::allocateReadFile() const
                         return NULL;
         }
 
-        assert ( false );
+        assert(false);
         return NULL;
+}
+
+// ============================================================================
+// RECORDBLOCK CLASS
+// ============================================================================
+
+void RecordBlock::getRecordChunk(vector< ReadRecord >& buffer,
+                                 size_t& chunkOffset, size_t targetChunkSize)
+{
+        assert(numChunksRead < numChunks);
+
+        chunkOffset = nextChunkOffset;
+
+        // find out how many records to copy
+        size_t thisChunkSize = 0;
+        for (size_t i = nextChunkOffset; i < recordBuffer.size(); i++) {
+                nextChunkOffset++;
+                buffer.push_back(recordBuffer[i]);
+                thisChunkSize += recordBuffer[i].getReadLength() + 1 - Kmer::getK();
+                if (thisChunkSize >= targetChunkSize)
+                        break;
+        }
+
+        numChunksRead++;
+}
+
+void RecordBlock::getReadChunk(vector< string >& buffer,
+                               size_t& chunkOffset, size_t targetChunkSize)
+{
+        assert(numChunksRead < numChunks);
+
+        chunkOffset = nextChunkOffset;
+
+        // find out how many records to copy
+        size_t thisChunkSize = 0;
+        for (size_t i = nextChunkOffset; i < recordBuffer.size(); i++) {
+                nextChunkOffset++;
+                buffer.push_back(recordBuffer[i].getRead());
+                thisChunkSize += recordBuffer[i].getReadLength() + 1 - Kmer::getK();
+                if (thisChunkSize >= targetChunkSize)
+                        break;
+        }
+
+        numChunksRead++;
+}
+
+void RecordBlock::writeRecordChunk(const vector< ReadRecord >& buffer,
+                                   size_t chunkOffset)
+{
+        copy(buffer.begin(), buffer.end(), recordBuffer.begin() + chunkOffset);
+        numChunksWritten++;
 }
 
 // ============================================================================
 // LIBRARY CONTAINER CLASS
 // ============================================================================
 
+double LibraryContainer::getAvgReadLength() const
+{
+        size_t sumReadLength = 0;
+        size_t sumReads = 0;
+        for (const ReadLibrary& lib : container) {
+                sumReadLength += lib.getAvgReadLength() * lib.getNumReads();
+                sumReads += lib.getNumReads();
+        }
+
+        return (double)sumReadLength/(double)sumReads;
+}
+
 bool LibraryContainer::getRecordChunk(vector<ReadRecord>& buffer,
                                       size_t& blockID, size_t& recordOffset)
 {
         // clear the buffer
         buffer.clear();
-        // wait until reads become available
-        std::unique_lock<std::mutex> lock(inputMutex);
-        readBufReady.wait(lock, [this]{return ((actReadBlockOffset < actReadBuffer->size()) ||
-                                               (!inputThreadWorking)); });
-        blockID = actReadBlockID;
-        recordOffset = actReadBlockOffset;
 
-        // find out how many records to copy
-        size_t thisChunkSize = 0;
-        for (size_t i = recordOffset; i < actReadBuffer->size(); i++) {
-                actReadBlockOffset++;
-                thisChunkSize += (*actReadBuffer)[i].getReadLength() + 1 - Kmer::getK();
-                if (thisChunkSize >= targetChunkSize)
-                        break;
+        // A) wait until work becomes available
+        std::unique_lock<std::mutex> workLock(workMutex);
+        workReady.wait(workLock, [this]{return workBlocks.find(currWorkBlockID) !=
+                                               workBlocks.end(); });
+
+        // B) get the current working block
+        RecordBlock *block = workBlocks[currWorkBlockID];
+
+        // check if it is a termination message (NULL)
+        if (block == NULL) {
+                workLock.unlock();
+
+                // send a termination message to the output thread
+                std::unique_lock<std::mutex> outputLock(outputMutex);
+                outputBlocks[currWorkBlockID] = NULL;
+                outputLock.unlock();
+
+                // and get out
+                return false;
         }
-        // actually copy records
-        buffer = vector<ReadRecord>(actReadBuffer->begin() + recordOffset,
-                                    actReadBuffer->begin() + actReadBlockOffset);
-        // if you took the final block of reads, notify the input thread
-        if (actReadBlockOffset >= actReadBuffer->size())
-                readBufEmpty.notify_one();
 
-        lock.unlock();
-        return !buffer.empty();
+        // if not, get a chunk of work
+        blockID = block->getBlockID();
+        block->getRecordChunk(buffer, recordOffset, targetChunkSize);
+
+        // C) if you took the last chunk, increase currWorkBlockID
+        bool moveToNextBlock = !block->chunkAvailable();
+        if (moveToNextBlock)
+                currWorkBlockID++;
+
+        // D.a) if no output thread is active, remove block from work queue
+        if (moveToNextBlock && !outputThreadActive)
+                workBlocks.erase(block->getBlockID());
+
+        workLock.unlock();
+
+        // D.b) if no output thread is active, return block to input queue
+        if (moveToNextBlock && !outputThreadActive) {
+                block->reset();
+                std::unique_lock<std::mutex> inputLock(inputMutex);
+                inputBlocks.push_back(block);
+                inputReady.notify_one();
+                inputLock.unlock();
+        }
+
+        assert(!buffer.empty());
+        return true;
 }
 
 bool LibraryContainer::getReadChunk(vector<string>& buffer,
@@ -218,38 +324,60 @@ bool LibraryContainer::getReadChunk(vector<string>& buffer,
         // clear the buffer
         buffer.clear();
 
-        // wait until reads become available
-        std::unique_lock<std::mutex> lock(inputMutex);
-        readBufReady.wait(lock, [this]{return ((actReadBlockOffset < actReadBuffer->size()) ||
-                                               (!inputThreadWorking)); });
+        // A) wait until work becomes available
+        std::unique_lock<std::mutex> workLock(workMutex);
+        workReady.wait(workLock, [this]{return workBlocks.find(currWorkBlockID) !=
+                                               workBlocks.end(); });
 
-        blockID = actReadBlockID;
-        recordOffset = actReadBlockOffset;
+        // B) get the current working block
+        RecordBlock *block = workBlocks[currWorkBlockID];
 
-        // find out how many records to copy
-        size_t thisChunkSize = 0;
-        for (size_t i = recordOffset; i < actReadBuffer->size(); i++) {
-                actReadBlockOffset++;
-                thisChunkSize += (*actReadBuffer)[i].getReadLength() + 1 - Kmer::getK();
-                buffer.push_back((*actReadBuffer)[i].getRead());
-                if (thisChunkSize >= targetChunkSize)
-                        break;
+        // check if it is a termination message (NULL)
+        if (block == NULL) {
+                workLock.unlock();
+
+                // send a termination message to the output thread
+                std::unique_lock<std::mutex> outputLock(outputMutex);
+                outputBlocks[currWorkBlockID] = NULL;
+                outputLock.unlock();
+
+                // and get out
+                return false;
         }
 
-        // if you took the final block of reads, notify the input thread
-        if (actReadBlockOffset >= actReadBuffer->size())
-                readBufEmpty.notify_one();
+        // if not, get a chunk of work
+        blockID = block->getBlockID();
+        block->getReadChunk(buffer, recordOffset, targetChunkSize);
 
-        lock.unlock();
+        // C) if you took the last chunk, increase currWorkBlockID
+        bool moveToNextBlock = !block->chunkAvailable();
+        if (moveToNextBlock)
+                currWorkBlockID++;
 
-        return !buffer.empty();
+        // D.a) if no output thread is active, remove block from work queue
+        if (moveToNextBlock && !outputThreadActive)
+                workBlocks.erase(block->getBlockID());
+
+        workLock.unlock();
+
+        // D.b) if no output thread is active, return block to input queue
+        if (moveToNextBlock && !outputThreadActive) {
+                block->reset();
+                std::unique_lock<std::mutex> inputLock(inputMutex);
+                inputBlocks.push_back(block);
+                inputReady.notify_one();
+                inputLock.unlock();
+        }
+
+        assert(!buffer.empty());
+        return true;
 }
 
 
 void LibraryContainer::inputThreadLibrary(ReadLibrary& input)
 {
         // read counters
-        size_t totNumReads = 0, numTooShort = 0, totReadLength = 0;
+        size_t totNumReads = 0, totReadLength = 0;
 
         // open the read file
         ReadFile *readFile = input.allocateReadFile();
@@ -258,24 +386,29 @@ void LibraryContainer::inputThreadLibrary(ReadLibrary& input)
         // aux variables
         ReadRecord record;
 
-        while (true) {
-                // fill up the idle read buffer (only this thread has access)
-                idlReadBuffer->clear();
+        while (readFile->good()) {
+                // A) wait until a record block is available
+                std::unique_lock<std::mutex> inputLock(inputMutex);
+                inputReady.wait(inputLock, [this]{return !inputBlocks.empty();});
+
+                // get a record block
+                RecordBlock *block = inputBlocks.back();
+                inputBlocks.pop_back();
+
+                inputLock.unlock();
+
+                // B) fill up the block (only this thread has access)
+                block->reset();
+
+                vector<ReadRecord> &recordBuffer = block->getRecordBuffer();
                 size_t thisBlockSize = 0, thisBlockNumRecords = 0;
                 size_t thisBlockNumChunks = 0, thisChunkSize = 0;
-                while ((thisBlockSize < targetBlockSize) &&
-                        readFile->getNextRecord(record)) {
+                while ((thisBlockSize < targetBlockSize) && (readFile->getNextRecord(record))) {
                         thisBlockNumRecords++;
                         totNumReads++;
                         totReadLength += record.getReadLength();
 
-                        // if the read is short than k, no need to process it
-                        /*if (record.getReadLength() < Kmer::getK()) {
-                                numTooShort++;
-                                continue;
-                        }*/
-
-                        idlReadBuffer->push_back(record);
+                        recordBuffer.push_back(record);
                         thisBlockSize += record.getReadLength() + 1 - Kmer::getK();
 
                         // count the number of chunks in this block
@@ -290,67 +423,58 @@ void LibraryContainer::inputThreadLibrary(ReadLibrary& input)
                 if (thisChunkSize > 0)
                         thisBlockNumChunks++;
 
-                cout << "Number of reads processed: " << totNumReads << "\r"; cout.flush();
+                block->setBlockInfo(currInputFileID, currInputBlockID++, thisBlockNumChunks);
 
-                // wait until active buffer is empty
-                std::unique_lock<std::mutex> lock(inputMutex);
-                readBufEmpty.wait(lock, [this]{return actReadBlockOffset >= actReadBuffer->size();});
-
-                actReadBuffer->clear();
-                actReadBlockOffset = 0;
-                actReadBlockID++;
-
-                // swap active buffer and idle buffer
-                std::swap(actReadBuffer, idlReadBuffer);
-
-                BlockID blockID(actReadFileID, actReadBlockID, thisBlockNumChunks, thisBlockNumRecords);
-                blockQueue.push(blockID);
+                // C) push the record block onto the worker queue
+                std::unique_lock<std::mutex> workLock(workMutex);
+                assert(workBlocks.find(block->getBlockID()) == workBlocks.end());
+                workBlocks[block->getBlockID()] = block;
 
                 // notify workers that more work is available
-                readBufReady.notify_all();
-                lock.unlock();
+                workReady.notify_all();
+                workLock.unlock();
 
-                // file has completely been read
-                if (!readFile->good())
-                        break;
+                // D) update stdout information
+                cout << "Number of reads processed: " << totNumReads << "\r"; cout.flush();
         }
 
         cout << "Number of reads processed: " << totNumReads << endl;
-        cout << "Average read length: " << totReadLength/totNumReads << endl;
-        input.setReadLength(totReadLength/totNumReads);
+
+        input.setAvgReadLength(totReadLength/totNumReads);
         input.setNumReads(totNumReads);
 
         readFile->close();
+
         // free temporary memory
         delete readFile;
-
-        // issue a warning about skipped reads
-        if (numTooShort > 0) {
-                double perc = 100.0 * (double)numTooShort/(double)totNumReads;
-                streamsize prev = cout.precision (2);
-
-                cout << "\n\tWARNING: Skipped " << numTooShort << " reads ("
-                     << perc << "% of total) because they were shorter than "
-                     << "the kmer size" << endl;
-
-                cout.precision(prev);
-        }
 }
 
 void LibraryContainer::commitRecordChunk(const vector<ReadRecord>& buffer,
                                          size_t blockID, size_t recordOffset)
 {
-        // wait until write becomes available
-        std::unique_lock<std::mutex> lock(outputMutex);
-        writeBufReady.wait(lock, [this, blockID]{return blockID == actWriteBlockID;});
+        // A) obtain the work mutex
+        std::unique_lock<std::mutex> workLock(workMutex);
 
-        copy(buffer.begin(), buffer.end(), actOutputBuffer->begin() + recordOffset);
+        // B) get the corresponding block and write the contents
+        assert(workBlocks.find(blockID) != workBlocks.end());
+        RecordBlock *block = workBlocks[blockID];
+        block->writeRecordChunk(buffer, recordOffset);
 
-        actWriteChunksLeft--;
-        if (actWriteChunksLeft == 0)
-                writeBufFull.notify_one();
+        // C.a) if the block is ready, pass it to the output thread
+        bool blockReady = block->isProcessed();
+        if (blockReady)
+                workBlocks.erase(block->getBlockID());
 
-        lock.unlock();
+        workLock.unlock();
+
+        // C.b) if the block is ready, pass it to the output thread
+        if (blockReady) {
+                std::unique_lock<std::mutex> outputLock(outputMutex);
+                outputBlocks[block->getBlockID()] = block;
+
+                outputReady.notify_one();
+                outputLock.unlock();
+        }
 }
 
 void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
@@ -362,55 +486,53 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
         uncorrectedFile->open("uncorrected-" + input.getOutputFileName(), WRITE);
 
         while (true) {
-                // wait until the input thread has read a new block
-                std::unique_lock<std::mutex> ilock(inputMutex);
-                readBufReady.wait(ilock, [this]{return ((!blockQueue.empty()) ||
-                                                        (!inputThreadWorking)); });
+                // A) wait until an output block is ready
+                std::unique_lock<std::mutex> outputLock(outputMutex);
+                outputReady.wait(outputLock, [this]{return (outputBlocks.find(currOutputBlockID) !=
+                                                            outputBlocks.end()); });
 
-                // if more work is available, get it from the queue
-                bool moveToNextFile = true;
-                BlockID blockID;
-                if (!blockQueue.empty()) {
-                        blockID = blockQueue.front();
-                        blockQueue.pop();
-                        if (blockID.fileID == actWriteFileID)
-                                moveToNextFile = false;
+                // B) get the next output block
+                RecordBlock* block = outputBlocks[currOutputBlockID];
+                assert(block == outputBlocks.begin()->second);
+
+                // check if it is a termination message (NULL)
+                if (block == NULL) {
+                        outputLock.unlock();
+                        break;
                 }
 
-                ilock.unlock();
+                // C) if we need to start a new file: get out
+                if (block->getFileID() != currOutputFileID) {
+                        outputLock.unlock();
+                        break;
+                }
 
-                // wait until active buffer is full
-                std::unique_lock<std::mutex> lock(outputMutex);
-                writeBufFull.wait(lock, [this]{return actWriteChunksLeft == 0;});
+                // D) remove the block from the output queue
+                outputBlocks.erase(currOutputBlockID);
+                currOutputBlockID++;
 
-                // swap active buffer and idle buffer
-                std::swap(actOutputBuffer, idlOutputBuffer);
+                outputLock.unlock();
 
-                actWriteBlockID = blockID.blockID;
-                actWriteChunksLeft = blockID.numChunks;
-                actOutputBuffer->resize(blockID.numRecords);
-
-                // notify workers that work can again be written
-                writeBufReady.notify_all();
-                lock.unlock();
-
-                // write the idle read buffer (only this thread has access)
-                for (size_t i = 0; i < idlOutputBuffer->size(); i++)
-                        if ((*idlOutputBuffer)[i].correction.size() > 0) {
-                                readFile->writeCorrectedRecord((*idlOutputBuffer)[i]);
+                // E) write the actual data (only this thread has access)
+                const vector<ReadRecord>& recordBuffer = block->getRecordBuffer();
+                for (size_t i = 0; i < recordBuffer.size(); i++)
+                        if (recordBuffer[i].correction.size() > 0) {
+                                readFile->writeCorrectedRecord(recordBuffer[i]);
                         } else {
-                                uncorrectedFile->writeUncorrectedRecord((*idlOutputBuffer)[i]);
+                                uncorrectedFile->writeUncorrectedRecord(recordBuffer[i]);
                         }
 
                 if (!readFile->good())
                         throw ios_base::failure("Cannot write to " + input.getOutputFileName());
                 if (!uncorrectedFile->good())
                         throw ios_base::failure("Cannot write to uncorrected-" + input.getOutputFileName());
-                idlOutputBuffer->clear();
 
-                // if we need to start a new file: get out
-                if (moveToNextFile)
-                        break;
+                // F) return the block to the input queue
+                block->reset();
+                std::unique_lock<std::mutex> inputLock(inputMutex);
+                inputBlocks.push_back(block);
+                inputReady.notify_one();
+                inputLock.unlock();
         }
 
         readFile->close();
@@ -426,67 +548,82 @@ void LibraryContainer::inputThreadEntry()
                 ReadLibrary &input = getInput(i);
 
                 cout << "Processing file " << i+1 << "/" << getSize() << ": "
-                     << input.getInputFilename() << ", type: " << input.getFileType()
-                     << endl;
+                     << input.getInputFilename() << ", type: "
+                     << input.getFileType() << endl;
 
                 inputThreadLibrary(input);
-                actReadFileID++;
+                currInputFileID++;
         }
 
-        // wait until active buffer is empty
-        unique_lock<std::mutex> lock(inputMutex);
-        inputThreadWorking = false;
-        readBufReady.notify_all();
-        lock.unlock();
+        // send a termination message to the workers
+        unique_lock<std::mutex> workLock(workMutex);
+        workBlocks[currInputBlockID] = NULL;
+        workReady.notify_all();
+        workLock.unlock();
 }
 
 void LibraryContainer::outputThreadEntry()
 {
-        // write all data
+        // write all output data
         for (size_t i = 0; i < getSize(); i++) {
                 ReadLibrary &input = getInput(i);
+
                 outputThreadLibrary(input);
-                actWriteFileID++;
+                currOutputFileID++;
         }
 }
 
 void LibraryContainer::startIOThreads(size_t targetChunkSize_,
                                       size_t targetBlockSize_,
-                                      bool writeReads)
+                                      bool outputThreadActive_)
 {
         targetChunkSize = targetChunkSize_;
         targetBlockSize = targetBlockSize_;
+        outputThreadActive = outputThreadActive_;
 
-        // input threads
-        inputThreadWorking = true;
-        actReadBuffer = new vector<ReadRecord>;
-        idlReadBuffer = new vector<ReadRecord>;
-        actReadFileID = actReadBlockID = actReadBlockOffset = 0;
+        // initialize input variables
+        currInputFileID = currInputBlockID = 0;
 
+        // initialize work thread variables
+        currWorkBlockID = 0;
+
+        // initialize output variables
+        currOutputFileID = currOutputBlockID = 0;
+
+        // initialize blocks and push them on the input stack
+        for (int i = 0; i < NUM_RECORD_BLOCKS; i++)
+                inputBlocks.push_back(new RecordBlock());
+
+        // start IO threads
         iThread = thread(&LibraryContainer::inputThreadEntry, this);
-
-        if (!writeReads)
-                return;
-
-        actOutputBuffer = new vector<ReadRecord>;
-        idlOutputBuffer = new vector<ReadRecord>;
-        actWriteFileID = actWriteBlockID = actWriteChunksLeft = 0;
-        oThread = thread(&LibraryContainer::outputThreadEntry, this);
+        if (outputThreadActive)
+                oThread = thread(&LibraryContainer::outputThreadEntry, this);
 }
 
 void LibraryContainer::joinIOThreads()
 {
         iThread.join();
 
-        delete idlReadBuffer; idlReadBuffer = NULL;
-        delete actReadBuffer; actReadBuffer = NULL;
-
-        if (oThread.joinable()) {
+        if (oThread.joinable())         // output thread might not be active
                 oThread.join();
-                delete idlOutputBuffer; idlOutputBuffer = NULL;
-                delete actOutputBuffer; actOutputBuffer = NULL;
-        }
 
-        // make sure the queue is empty
-        std::queue<BlockID>().swap(blockQueue);
+        assert(inputBlocks.size() == NUM_RECORD_BLOCKS);
+        // delete blocks and clear the input stack
+        for (size_t i = 0; i < inputBlocks.size(); i++)
+                delete inputBlocks[i];
+        inputBlocks.clear();            // contains all blocks
+        workBlocks.clear();             // contains only a termination msg
+        outputBlocks.clear();           // contains only a termination msg
+}
+
+void LibraryContainer::readMetadata(const string& path)
+{
+        for (auto& it : container)
+                it.readMetadata(path);
+}
+
+void LibraryContainer::writeMetadata(const string& path) const
+{
+        for (const auto& it : container)
+                it.writeMetadata(path);
 }

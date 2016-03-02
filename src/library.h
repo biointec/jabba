@@ -1,6 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2014, 2015 Jan Fostier (jan.fostier@intec.ugent.be)     *
- *   Copyright (C) 2014, 2015 Mahdi Heydari (mahdi.heydari@intec.ugent.be) *
+ *   Copyright (C) 2014 - 2016 Jan Fostier (jan.fostier@intec.ugent.be)    *
  *   This file is part of Brownie                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -29,19 +28,17 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
-#include <queue>
+#include <map>
 
 #include <mutex>
 #include <condition_variable>
 
-
 #include <cassert>
-#ifdef _MSC_VER
-#include "msstdint.h"     // uint64_t types, etc.
-#else
-#include <stdint.h>
-#endif
 #include <thread>
+
+// The number of recordBlocks simulataneously held in memory. Higher values
+// result in more parallel chunks at the cost of increased memory use.
+#define NUM_RECORD_BLOCKS 2
 
 // ============================================================================
 // FILETYPE ENUM
@@ -65,7 +62,7 @@ private:
         FileType fileType;              // file type (FASTQ, FASTA, etc.)
 
         size_t numReads;                // number of reads in library
-        double avgReadLength;           // average size of the reads
+        double avgReadLength;           // average length of the reads
 
 public:
         /**
@@ -75,8 +72,6 @@ public:
          */
         ReadLibrary(const std::string& inputFilename,
                     const std::string& outputFilename);
-        
-        ReadLibrary(){};
 
         /**
          * Allocate and return the correct read file for a certain input
@@ -96,7 +91,7 @@ public:
          * Get the output filename
          * @return The output filename
          */
-        std::string getOutputFileName(){
+        std::string getOutputFileName() const {
                 return outputFilename;
         }
 
@@ -128,7 +123,7 @@ public:
          * Set the read length
          * @param target The read length
          */
-        void setReadLength(double target) {
+        void setAvgReadLength(double target) {
                 avgReadLength = target;
         }
 
@@ -136,35 +131,137 @@ public:
          * Get the read length
          * @return The read length
          */
-        double getReadLength() const {
+        double getAvgReadLength() const {
                 return avgReadLength;
         }
+
+        /**
+         * Read the metadata to disk
+         * @param path Path to dir where the metadata should be read
+         */
+        void readMetadata(const std::string& path);
+
+        /**
+         * Write the metadata to disk
+         * @param path Path to dir where the metadata should be written
+         */
+        void writeMetadata(const std::string& path) const;
+};
+
+// ============================================================================
+// RECORDBLOCK CLASS
+// ============================================================================
+
+class RecordBlock
+{
+private:
+        size_t fileID;                  // file identifier
+        size_t blockID;                 // block identifier
+        size_t numChunks;               // number of chunks in this block
+        size_t numChunksRead;           // number of chunks read
+        size_t numChunksWritten;        // number of chunks written
+        size_t nextChunkOffset;         // offset of the next chunk to be read
+
+        std::vector<ReadRecord> recordBuffer;   // actual records
+
+public:
+        /**
+         * Default constructor
+         */
+        RecordBlock() : fileID(0), blockID(0), numChunks(0),
+                numChunksRead(0), numChunksWritten(0), nextChunkOffset(0) {}
+
+        /**
+         * Clear the contents of this block
+         */
+        void reset() {
+                fileID = blockID = numChunks = numChunksRead = 0;
+                numChunksWritten = nextChunkOffset = 0;
+                recordBuffer.clear();
+        }
+
+        /**
+         * Return the blockID
+         * @return The blockID
+         */
+        size_t getBlockID() const {
+                return blockID;
+        }
+
+        /**
+         * Return the fileID
+         * @return The fileID
+         */
+        size_t getFileID() const {
+                return fileID;
+        }
+
+        /**
+         * Return true of at least one chunk if available for reading
+         * @return true or false
+         */
+        bool chunkAvailable() const {
+                return numChunksRead < numChunks;
+        }
+
+        /**
+         * Returns true if the block is fully processed
+         * @return true of false
+         */
+        bool isProcessed() const {
+                return numChunksWritten == numChunks;
+        }
+
+        /**
+         * Accessor to the record buffer
+         * @return A reference to the record buffer
+         */
+        std::vector<ReadRecord>& getRecordBuffer() {
+                return recordBuffer;
+        }
+
+        /**
+         * Set the block meta information
+         * @param fileID_ File identifier
+         * @param blockID_ Block identifier
+         * @param numChunks_ Number of chunks in this block
+         */
+        void setBlockInfo(size_t fileID_, size_t blockID_, size_t numChunks_) {
+                fileID = fileID_;
+                blockID = blockID_;
+                numChunks = numChunks_;
+        }
+
+        /**
+         * Get next available input record chunk
+         * @param buffer Record buffer to write to (contents will be appended)
+         * @param chunkOffset Chunk offset (output)
+         * @param targetChunkSize Target chunk size (input)
+         */
+        void getRecordChunk(std::vector<ReadRecord>& buffer,
+                            size_t& chunkOffset, size_t targetChunkSize);
+
+        /**
+         * Get next available input read chunk
+         * @param buffer Record buffer to write to (contents will be appended)
+         * @param chunkOffset Chunk offset (output)
+         * @param targetChunkSize Target chunk size (input)
+         */
+        void getReadChunk(std::vector<std::string>& buffer,
+                          size_t& chunkOffset, size_t targetChunkSize);
+
+        /**
+         * Replace a chunk with the contents provided by the buffer
+         * @param buffer Record buffer with new contents
+         * @param chunkOffset Record offset of the chunk
+         */
+        void writeRecordChunk(const std::vector<ReadRecord>& buffer,
+                              size_t chunkOffset);
 };
 
 // ============================================================================
 // LIBRARYCONTAINER CLASS
 // ============================================================================
-
-class BlockID
-{
-public:
-        /**
-         * Default constructor
-         */
-        BlockID() : fileID(0), blockID(0), numChunks(0), numRecords(0) {}
-
-        /**
-         * Default constructor
-         */
-        BlockID(size_t fileID_, size_t blockID_, size_t numChunks_,
-                size_t numRecords_) : fileID(fileID_), blockID(blockID_),
-                numChunks(numChunks_), numRecords(numRecords_) {}
-
-        size_t fileID;          // file identifier to which this block belongs
-        size_t blockID;         // unique block identifier within this file
-        size_t numChunks;       // number of chunks within this block
-        size_t numRecords;      // number of records within this block
-};
 
 class LibraryContainer
 {
@@ -174,30 +271,29 @@ private:
         size_t targetBlockSize;                         // a block is a number of (overlapping) k-mers read in a single run
         size_t targetChunkSize;                         // a chunk is a piece of work attributed to one thread
 
-        std::queue<BlockID> blockQueue;                 // queue holding all blocks to be processed
-
-        // variables for thread-safe reading
         std::thread iThread;                            // input thread
-        bool inputThreadWorking;                        // input thread still working
-        std::mutex inputMutex;                          // input thread mutex
-        std::condition_variable readBufReady;           // read buffer full condition
-        std::condition_variable readBufEmpty;           // read buffer empty condition
-        std::vector<ReadRecord> *actReadBuffer;         // active read buffer
-        std::vector<ReadRecord> *idlReadBuffer;         // idle read buffer
-        size_t actReadFileID;                           // identifier of the active read file
-        size_t actReadBlockID;                          // identifier of the active read block ID
-        size_t actReadBlockOffset;                      // offset within the active read block
-
-        // variables for thread-safe writing
         std::thread oThread;                            // output thread
+        bool outputThreadActive;                        // is the output thread active?
+
+        // input thread variables (protect by inputMutex)
+        std::mutex inputMutex;                          // input thread mutex
+        std::condition_variable inputReady;             // input blocks ready condition
+        std::vector<RecordBlock*> inputBlocks;          // input blocks that are empty
+        size_t currInputFileID;                         // identifier of the current input file
+        size_t currInputBlockID;                        // identifier of the current input block
+
+        // worker thread variables (protect by workMutex)
+        std::mutex workMutex;                           // worker thread mutex
+        std::condition_variable workReady;              // work ready condition
+        std::map<size_t, RecordBlock*> workBlocks;      // blocks being processed
+        size_t currWorkBlockID;                         // identifier of the block currently being processed
+
+        // output thread variables (protect by outputMutex)
         std::mutex outputMutex;                         // output thread mutex
-        std::condition_variable writeBufReady;          // write buffer ready condition
-        std::condition_variable writeBufFull;           // write buffer full condition
-        std::vector<ReadRecord> *actOutputBuffer;       // active write buffer
-        std::vector<ReadRecord> *idlOutputBuffer;       // idle write buffer
-        size_t actWriteFileID;                          // identifier of the output file
-        size_t actWriteBlockID;                         // identifier of the output block
-        size_t actWriteChunksLeft;                      // number of chunks left in active write block
+        std::condition_variable outputReady;            // write buffer full condition
+        std::map<size_t, RecordBlock*> outputBlocks;    // processed blocks
+        size_t currOutputFileID;                        // identifier of the current output file
+        size_t currOutputBlockID;                       // identifier of the current output block
 
         /**
          * Write the inputs for a specific library
@@ -259,6 +355,12 @@ public:
         }
 
         /**
+         * The (weighted) average read length over all libraries
+         * @return The (weighted) average read length over all libraries
+         */
+        double getAvgReadLength() const;
+
+        /**
          * Get next record chunk from the input
          * @param buffer Buffer in which to store the records (output)
          * @param blockID Block identifier (output)
@@ -298,20 +400,24 @@ public:
                             bool writeReads = false);
 
         /**
-         * Finalize read threading
+         * Join input (and optionally) also the output thread
+         * Make sure that all worker threads are joined before calling this
+         * routine.  Calling getReadChunk() or commitRecordChunk() after this
+         * routine is called will result in undefined behavior
          */
         void joinIOThreads();
 
-        double getReadLength() const {
-                size_t readLengthAvg = 0;
-                size_t totalNumOfReads = 0;
-                for (auto it : container){
-                        readLengthAvg=((readLengthAvg *totalNumOfReads)+it.getReadLength()*it.getNumReads())/(totalNumOfReads+it.getNumReads());
-                        totalNumOfReads=totalNumOfReads+it.getNumReads();
-                }
-                return readLengthAvg;
+        /**
+         * Read the metadata to disk
+         * @param path Path to dir where the metadata should be read
+         */
+        void readMetadata(const std::string& path);
 
-        }
+        /**
+         * Write the metadata to disk
+         * @param path Path to dir where the metadata should be written
+         */
+        void writeMetadata(const std::string& path) const;
 };
 
 #endif
