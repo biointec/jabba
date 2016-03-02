@@ -31,7 +31,7 @@ AlignedRead::AlignedRead(Read &read, OutputMode output_mode)
 {}
 
 std::vector<std::pair<int, int>> AlignedRead::not_corrected() {
-	sort();
+	sortAlongRead();
 	std::vector<std::pair<int, int>> nc;
 	int curr_pos = 0;
 	int curr_al = 0;
@@ -64,11 +64,20 @@ void AlignedRead::correct(LocalAlignment const &al) {
 	local_alignments_.push_back(al);
 }
 
-void AlignedRead::sort() {
+void AlignedRead::sortAlongRead() {
 	auto sort_alignments =
 		[&](LocalAlignment a, LocalAlignment b)-> bool
 	{
 		return a.get_read_start() < b.get_read_start();
+	};
+	std::sort(local_alignments_.begin(), local_alignments_.end(), sort_alignments);
+}
+
+void AlignedRead::sortReadCov() {
+	auto sort_alignments =
+		[&](LocalAlignment a, LocalAlignment b)-> bool
+	{
+		return a.get_read_end() - a.get_read_start() < b.get_read_end() - b.get_read_start();
 	};
 	std::sort(local_alignments_.begin(), local_alignments_.end(), sort_alignments);
 }
@@ -91,7 +100,7 @@ bool AlignedRead::fit(std::vector<int>::iterator const &index,
 }
 
 bool AlignedRead::merge() {
-	sort();
+	sortAlongRead();
 	for (int i = 0; i < local_alignments_.size(); ++i) {
 		std::vector<int> lai = local_alignments_[i].get_path();
 		for (int j = 0; j < local_alignments_.size(); ++j) {
@@ -123,12 +132,12 @@ bool AlignedRead::merge() {
 }
 
 void AlignedRead::print() {
-	for (auto la : local_alignments_) {
+	for (const auto &la : local_alignments_) {
 		std::cout << la.to_string(read_.get_id()) << std::endl;
 	}
 }
 
-std::string AlignedRead::getCorrectedRead(Graph const &graph) {
+void AlignedRead::getCorrectedRead(Graph const &graph, std::vector<std::string> &corrections) {
 	//std::cout << "Local Alignments before merging:	" << std::endl;
 	//print();
 	while(merge());
@@ -136,29 +145,32 @@ std::string AlignedRead::getCorrectedRead(Graph const &graph) {
 	//print();
 	std::string corrected_read = "";
 	if (local_alignments_.size() == 0) {
-		return "";//read_.get_sequence();
+		return;//read_.get_sequence();
 	}
 	int max_cov = 0;
-	LocalAlignment best_la;
-	for (auto &la : local_alignments_) {
-		int cov = la.get_read_end() - la.get_read_start();
-		if (cov > max_cov) {
-			max_cov = cov;
-			best_la = la;
+	
+	sortReadCov();
+	std::vector<LocalAlignment> corrs;
+	for (const LocalAlignment &la : local_alignments_) {
+		bool overlaps = false;
+		for (const LocalAlignment &c : corrs) {
+			if(la.overlapsOnRead(c)) {
+				overlaps = true;
+				continue;
+			}
+		}
+		if(!overlaps) {
+			corrs.push_back(la);
 		}
 	}
-	//std::cout << "Final Local Alignment:	" << std::endl;
-	//std::cout << "Read size: " << read_.size() << " " << best_la.to_string(read_.get_id()) << "\n";
-	std::string result = graph.concatenateNodes(best_la.get_path());
-	if (output_mode_ == LONG) {
-		return result;
-	} else if (output_mode_ == SHORT){
-		//std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end()<< std::endl;
-		result = result.substr(best_la.get_ref_start(), best_la.get_ref_end() - best_la.get_ref_start());
-		//std::cout << "RESULT: " << result.size() << " " << best_la.get_ref_start() << " " << best_la.get_ref_end() - best_la.get_ref_start() << std::endl;
-		return result;
-	} else {
-		std::cerr << "Undefined output mode\n";
-		exit(1);
+	for (const LocalAlignment &la : corrs) {
+		std::string result = graph.concatenateNodes(la.get_path());
+		if (output_mode_ == LONG) {
+			corrections.push_back(result);
+		} else if (output_mode_ == SHORT){
+			result = result.substr(la.get_ref_start(), la.get_ref_end() - la.get_ref_start());
+			corrections.push_back(result);
+		}
 	}
+	
 }

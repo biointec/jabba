@@ -115,7 +115,8 @@ class InterNodeChain{
 		//print all the seeds to std::cout
 		void printSeeds();
 		//chain seeds
-		std::string chainSeeds(AlignedRead &ar);
+		void chainSeeds(AlignedRead &ar,
+			std::vector<std::string> &corrections);
 };
 
 #endif

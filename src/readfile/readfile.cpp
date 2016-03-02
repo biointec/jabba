@@ -90,7 +90,7 @@ ReadFile::ReadFile(bool gzipped) : rfHandler(NULL)
 {
 #ifndef HAVE_ZLIB
         if (gzipped)
-                throw ios_base::failure("Velvet was compiled without "
+                throw ios_base::failure("Jabba was compiled without "
                                         "zlib support");
         rfHandler = new RegularReadFileHandler();
 #else
@@ -111,9 +111,20 @@ void ReadFile::writeRecord(const ReadRecord& record)
 
 void ReadFile::writeCorrectedRecord(const ReadRecord& record)
 {
-        rfHandler->writeLine(record.preRead);
-        rfHandler->writeLine(record.correction);
-        rfHandler->writeLine(record.postRead);
+        size_t index = 1;
+        if (record.correction.size() > 1) {
+                for (const auto &correction : record.correction) {
+                        std::string preread = record.preRead.substr(0, record.preRead.size() - 1) + "_" + std::to_string(index) + "\n";
+                        rfHandler->writeLine(preread);
+                        rfHandler->writeLine(correction);
+                        rfHandler->writeLine(record.postRead);
+                        ++index;
+                }
+        } else if (record.correction.size() == 1) {
+                rfHandler->writeLine(record.preRead);
+                rfHandler->writeLine(record.correction[0]);
+                rfHandler->writeLine(record.postRead);
+        }
 }
 
 void ReadFile::writeUncorrectedRecord(const ReadRecord& record)

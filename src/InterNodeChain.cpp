@@ -338,7 +338,7 @@ std::vector<LocalAlignment> InterNodeChain::correctRead(
 	return alignments;
 }
 
-std::string InterNodeChain::chainSeeds(AlignedRead &ar) {
+void InterNodeChain::chainSeeds(AlignedRead &ar, std::vector<std::string> &corrections) {
 	for (int i = 0; i < max_passes_; ++i) {
 		std::vector<std::pair<int, int>> segments
 			= ar.not_corrected();
@@ -366,12 +366,11 @@ std::string InterNodeChain::chainSeeds(AlignedRead &ar) {
 		//chainPaths(ar);
 	}
 	//chainPaths(ar);
-	std::string result = ar.getCorrectedRead(graph_);
-	return result;
+	ar.getCorrectedRead(graph_, corrections);
 }
 
 void InterNodeChain::chainPaths(AlignedRead &ar) const {
-	ar.sort();
+	ar.sortAlongRead();
 	std::vector<LocalAlignment> las = ar.get_local_alignments();
 	if (las.size() < 2) {
 		return;

@@ -55,9 +55,11 @@ public:
 	//add a local alignment
 	void correct(LocalAlignment const &al);
 	//correct the read based on the longest local alignment
-	std::string getCorrectedRead(Graph const &graph);
+	void getCorrectedRead(Graph const &graph,
+		std::vector<std::string> &corrections);
 	//sort local_alignments_
-	void sort();
+	void sortAlongRead();
+	void sortReadCov();
 	//checks if laj extends lai, overlap ends at index
 	bool fit(std::vector<int>::iterator const &index,
 		std::vector<int> const &lai, std::vector<int> const & laj);
