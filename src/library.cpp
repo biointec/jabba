@@ -159,6 +159,14 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
                 exit(EXIT_FAILURE);
         }
 
+        struct MatchPathSeparator {
+                bool operator()( char ch ) const {
+                        return ch == '/';
+                }
+        };
+
+        baseFilename = std::string(std::find_if(baseFilename.rbegin(), baseFilename.rend(), MatchPathSeparator()).base(), baseFilename.end());
+
         if (outputFilename.empty()) {
                 ostringstream oss;
                 oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << fileType;
