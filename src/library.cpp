@@ -96,12 +96,12 @@ void ReadLibrary::writeMetadata(const string& path) const
 // ============================================================================
 
 ReadLibrary::ReadLibrary(const std::string& inputFilename_,
-                         const std::string& outputFilename_) :
-        inputFilename(inputFilename_), outputFilename(outputFilename_),
+                         const std::string& outputDirectory_) :
+        inputFilename(inputFilename_), outputFilename(""), uncorrectedFilename(""),
         fileType(UNKNOWN_FT), numReads(0), avgReadLength(0.0)
 {
         // try to figure out the file format based on the extension
-        string extension, baseFilename;
+        string extension;
 
         if (inputFilename.length() >= 4)
                 extension = inputFilename.substr(inputFilename.length() - 4);
@@ -159,11 +159,23 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
                 exit(EXIT_FAILURE);
         }
 
-        // set the outputFilename only if not specified by the user
+        struct MatchPathSeparator {
+                bool operator()( char ch ) const {
+                        return ch == '/';
+                }
+        };
+
+        baseFilename = std::string(std::find_if(baseFilename.rbegin(), baseFilename.rend(), MatchPathSeparator()).base(), baseFilename.end());
+        
         if (outputFilename.empty()) {
                 ostringstream oss;
-                oss << baseFilename << ".corr." << fileType;
+                oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << fileType;
                 outputFilename = oss.str();
+        }
+        if (uncorrectedFilename.empty()) {
+                ostringstream oss;
+                oss << outputDirectory_ << "/Jabba-uncorrected-" << baseFilename << "." << fileType;
+                uncorrectedFilename = oss.str();
         }
 }
 
@@ -482,7 +494,7 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
         ReadFile *readFile = input.allocateReadFile();
         readFile->open(input.getOutputFileName(), WRITE);
         ReadFile *uncorrectedFile = input.allocateReadFile();
-        uncorrectedFile->open("uncorrected-" + input.getOutputFileName(), WRITE);
+        uncorrectedFile->open(input.getUncorrectedFileName(), WRITE);
 
         while (true) {
                 // A) wait until an output block is ready
