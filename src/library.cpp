@@ -97,7 +97,7 @@ void ReadLibrary::writeMetadata(const string& path) const
 
 ReadLibrary::ReadLibrary(const std::string& inputFilename_,
                          const std::string& outputDirectory_) :
-        inputFilename(inputFilename_), outputFilename(""),
+        inputFilename(inputFilename_), outputFilename(""), uncorrectedFilename(""),
         fileType(UNKNOWN_FT), numReads(0), avgReadLength(0.0)
 {
         // try to figure out the file format based on the extension
@@ -166,11 +166,16 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
         };
 
         baseFilename = std::string(std::find_if(baseFilename.rbegin(), baseFilename.rend(), MatchPathSeparator()).base(), baseFilename.end());
-
+        cout << baseFilename << "\n";
         if (outputFilename.empty()) {
                 ostringstream oss;
                 oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << fileType;
                 outputFilename = oss.str();
+        }
+        if (uncorrectedFilename.empty()) {
+                ostringstream oss;
+                oss << outputDirectory_ << "/Jabba-uncorrected-" << baseFilename << "." << fileType;
+                uncorrectedFilename = oss.str();
         }
 }
 

@@ -57,8 +57,9 @@ class ReadLibrary
 {
 private:
         std::string inputFilename;      // name of the input file
-        std::string outputFilename;     // name of the output file
         std::string baseFilename;	// base name of the input file
+        std::string outputFilename;     // name of the output file
+        std::string uncorrectedFilename;     // name of the uncorrected file
 
         FileType fileType;              // file type (FASTQ, FASTA, etc.)
 
@@ -94,6 +95,14 @@ public:
          */
         std::string getOutputFileName() const {
                 return outputFilename;
+        }
+
+        /**
+         * Get the uncorrected filename
+         * @return The uncorrected filename
+         */
+        std::string getUncorrectedFileName() const {
+                return uncorrectedFilename;
         }
 
         /**
