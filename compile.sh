@@ -6,7 +6,7 @@ cd build
 	make
 cd ..
 mkdir -p bin
-cp -b ./build/src/Jabba ./bin/Jabba
+cp -b ./build/src/jabba ./bin/jabba
 #cd src
 #doxygen ../Profiling/Doxyfile > ../Profiling/doxygen_output
 #pmccabe -vt *.hpp *.cpp > ../Profiling/pmccabe_output

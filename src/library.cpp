@@ -166,7 +166,7 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
         };
 
         baseFilename = std::string(std::find_if(baseFilename.rbegin(), baseFilename.rend(), MatchPathSeparator()).base(), baseFilename.end());
-        cout << baseFilename << "\n";
+        
         if (outputFilename.empty()) {
                 ostringstream oss;
                 oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << fileType;

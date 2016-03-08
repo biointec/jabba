@@ -75,7 +75,6 @@ Settings::Settings(int argc, char** args)
                 } else if (arg == "-g" || arg == "--graph") {
                         ++i;
                         graph_name = args[i];
-                        std::cout << graph_name << std::endl;
                 } else if (arg == "-k" || arg == "--dbgk") {
                         ++i;
                         dbg_k_ = std::stoi(args[i]);
@@ -111,9 +110,7 @@ Settings::Settings(int argc, char** args)
                 libraries_.insert(ReadLibrary(lib, directory_));
         }
         //
-        std::cout << graph_name << std::endl;
         graph_ = new ReadLibrary(graph_name, "");
-        std::cout << "done" << std::endl;
         // try to create the output directory
         #ifdef _MSC_VER
         CreateDirectory(directory_.c_str(), NULL);
