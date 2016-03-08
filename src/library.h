@@ -58,6 +58,7 @@ class ReadLibrary
 private:
         std::string inputFilename;      // name of the input file
         std::string outputFilename;     // name of the output file
+        std::string baseFilename;	// base name of the input file
 
         FileType fileType;              // file type (FASTQ, FASTA, etc.)
 
@@ -68,10 +69,10 @@ public:
         /**
          * Default constructor
          * @param inputFilename Input filename
-         * @param outputFilename Output filename
+         * @param dir Output directory name
          */
         ReadLibrary(const std::string& inputFilename,
-                    const std::string& outputFilename);
+                    const std::string& outputDirectory);
 
         /**
          * Allocate and return the correct read file for a certain input

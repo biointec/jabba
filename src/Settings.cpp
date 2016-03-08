@@ -58,6 +58,7 @@ Settings::Settings(int argc, char** args)
         output_mode_ = SHORT;
         std::string graph_name = "DBGraph.fasta";
         FileType file_type(FASTA);
+        std::vector<std::string> libraries;
         // extract the other parameters
         for (int i = 1; i < argc; i++) {
                 std::string arg(args[i]);
@@ -99,13 +100,15 @@ Settings::Settings(int argc, char** args)
                                 output_mode_ = SHORT;
                         } else if (args[i] == "long") {
                                 output_mode_ = LONG;
+                        } else {
+                                std::cerr << args[i] << " is not a valid output mode. Use \"long\" or \"short\" instead.\n";
                         }
                 } else {// filename
-                        std::string inputFilename = args[i];
-                        std::string outputFilename = "Jabba-" + inputFilename;
-                        ReadLibrary lib = ReadLibrary(inputFilename, outputFilename);
-                        libraries_.insert(lib);
+                        libraries.push_back(args[i]);
                 }
+        }
+        for (auto const &lib : libraries) {
+                libraries_.insert(ReadLibrary(lib, directory_));
         }
         //
         std::cout << graph_name << std::endl;
