@@ -494,7 +494,7 @@ void LibraryContainer::outputThreadLibrary(ReadLibrary& input)
         ReadFile *readFile = input.allocateReadFile();
         readFile->open(input.getOutputFileName(), WRITE);
         ReadFile *uncorrectedFile = input.allocateReadFile();
-        uncorrectedFile->open("uncorrected-" + input.getOutputFileName(), WRITE);
+        uncorrectedFile->open(input.getUncorrectedFileName(), WRITE);
 
         while (true) {
                 // A) wait until an output block is ready
