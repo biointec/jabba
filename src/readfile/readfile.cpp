@@ -109,21 +109,25 @@ void ReadFile::writeRecord(const ReadRecord& record)
         rfHandler->writeLine(record.postRead);
 }
 
+/*
+        Always writes fasta format, no matter what the input file was
+*/
 void ReadFile::writeCorrectedRecord(const ReadRecord& record)
 {
         size_t index = 1;
         if (record.correction.size() > 1) {
                 for (const auto &correction : record.correction) {
-                        std::string preread = record.preRead.substr(0, record.preRead.size() - 1) + "_" + std::to_string(index) + "\n";
+                        auto preread = ">" + record.preRead.substr(1, record.preRead.size() - 2) + "_" + std::to_string(index) + "\n";
                         rfHandler->writeLine(preread);
                         rfHandler->writeLine(correction);
-                        rfHandler->writeLine(record.postRead);
+                        rfHandler->writeLine("\n");
                         ++index;
                 }
         } else if (record.correction.size() == 1) {
-                rfHandler->writeLine(record.preRead);
+                auto preread = ">" + record.preRead.substr(1, record.preRead.size() - 1);
+                rfHandler->writeLine(preread);
                 rfHandler->writeLine(record.correction[0]);
-                rfHandler->writeLine(record.postRead);
+                rfHandler->writeLine("\n");
         }
 }
 

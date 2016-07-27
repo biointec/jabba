@@ -148,7 +148,7 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
         }
 
         if (fileType == UNKNOWN_FT) {
-                cerr << "Brownie: don't know how to open file: '" << inputFilename << "'\n";
+                cerr << "Jabba doesn't know how to open file: '" << inputFilename << "'\n";
                 cerr << "Expected one of the following extensions: .fastq, .fasta, .sam, .raw (or .gz variants thereof)\n";
                 exit(EXIT_FAILURE);
         }
@@ -169,7 +169,7 @@ ReadLibrary::ReadLibrary(const std::string& inputFilename_,
         
         if (outputFilename.empty()) {
                 ostringstream oss;
-                oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << fileType;
+                oss << outputDirectory_ << "/Jabba-" << baseFilename << "." << "fasta";
                 outputFilename = oss.str();
         }
         if (uncorrectedFilename.empty()) {
