@@ -62,6 +62,8 @@ class SeedFinder{
                 void preprocessReference();
                 //initialise the ESSA
                 sparseSA * init_essaMEM(std::string const &meta);
+                //increase sparseness factor, should the need arise
+                void compute_sparseness();
                 //find seeds between read and the graph
                 void getSeeds(std::string const &read,
                         std::map<int, std::vector<Seed>> &seed_map,

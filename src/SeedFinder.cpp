@@ -108,6 +108,14 @@ void SeedFinder::getSeeds(std::string const &read,
         }
 }
 
+void SeedFinder::compute_sparseness() {
+        auto suggestion = 1 + (reference_.size() >> 31);
+        if (k_ < suggestion) {
+                std::cout << "Increasing sparseness factor from " << k_ << " to " << suggestion << "." << std::endl;
+                k_ = suggestion;
+        }
+}
+
 sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {        
         std::cout << "Constructing ESSA... " << std::endl;
         std::vector<std::string> refdescr;
@@ -122,6 +130,7 @@ sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {
         bool printSubstring = false;
         bool printRevCompForw = false;
         sparseSA * sa;
+        compute_sparseness();
         sa = new sparseSA(
                 reference_,                //reference string
                 refdescr,                //description of the ref
