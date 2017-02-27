@@ -21,6 +21,7 @@
 #define NODE_HPP
 
 #include "TString.hpp"
+#include <vector>
 
 class TNode {
 private:
