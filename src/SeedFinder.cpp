@@ -26,11 +26,6 @@
 #include "Seed.hpp"
 #include "mummer/sparseSA.hpp"
 
-void SeedFinder::init () {
-        //preprocessReference();
-        sa_ = init_essaMEM("DBGraph");
-}
-
 SeedFinder::~SeedFinder() {
         delete sa_;
 }
@@ -40,21 +35,6 @@ void SeedFinder::addNodeToReference(std::string const &node) {
         reference_ += "#";
         long size = nodes_index_.back() + node.size() + 1;
         nodes_index_.push_back(size);
-}
-
-void SeedFinder::preprocessReference() {
-        // Increase string length so it is divisible by k_. 
-        // Don't forget to count $ termination character. 
-        int append_k;
-        if (reference_.length() % k_ != 0) {
-                append_k = k_ - reference_.length() % k_ ;
-                
-        }
-        // Make sure last K-sampled characters are this special character as well!!
-        append_k += k_;
-        for (long i = 0; i < append_k; i++) {
-                reference_ += "$";        // Append "special" end character. Note: It must be lexicographically less.
-        }
 }
 
 int SeedFinder::binary_node_search(long const &mem_start) const {
@@ -76,7 +56,7 @@ int SeedFinder::binary_node_search(long const &mem_start) const {
 }
 
 int SeedFinder::startOfHit(int node_nr, long start_in_ref) const {
-        
+
         long start_of_node = nodes_index_[2 * node_nr * (node_nr < 0 ? -1 : 1) - 2 + (node_nr < 0)];
         return (int) (start_in_ref - start_of_node);
 }
@@ -90,7 +70,7 @@ void SeedFinder::getSeeds(std::string const &read,
         vector<match_t> matches;        //will contain the matches
         bool print = 0;        //not sure what it prints if set to 1
         sa_->findMEM(0, read, matches, seed_min_length, print);
-                
+
         //parse the results
         for (int i = 0; i < matches.size(); ++i) {
                 match_t m = matches[i];
@@ -116,7 +96,7 @@ void SeedFinder::compute_sparseness() {
         }
 }
 
-sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {        
+void SeedFinder::init_essaMEM(std::string const &meta) {
         std::cout << "Constructing ESSA... " << std::endl;
         std::vector<std::string> refdescr;
         refdescr.push_back(meta);
@@ -129,9 +109,8 @@ sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {
         int kmer_size = 9;
         bool printSubstring = false;
         bool printRevCompForw = false;
-        sparseSA * sa;
         compute_sparseness();
-        sa = new sparseSA(
+        sa_ = new sparseSA(
                 reference_,                //reference string
                 refdescr,                //description of the ref
                 startpos,                //vector of startpositions in the ref
@@ -147,17 +126,15 @@ sparseSA * SeedFinder::init_essaMEM(std::string const &meta) {
                 false
         );
         //sa->construct();
-        
+
         stringstream * prefixstream = new stringstream();
         (*prefixstream) << settings_.get_directory() << "/" << meta << "_" << k_ << "_" << suflink << "_" << child;
         string prefix = prefixstream->str();
-        if (!sa->load(prefix)) {
-                sa->construct();
-                sa->save(prefix);
+        if (!sa_->load(prefix)) {
+                sa_->construct();
+                sa_->save(prefix);
         }
         delete prefixstream;
         std::cout << "Done." << std::endl;
-        std::cout << "INDEX SIZE IN BYTES: " << sa->index_size_in_bytes() << endl;
-        return sa;
+        std::cout << "INDEX SIZE IN BYTES: " << sa_->index_size_in_bytes() << endl;
 }
-

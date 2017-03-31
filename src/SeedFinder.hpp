@@ -38,7 +38,7 @@ class SeedFinder{
                 std::string reference_; //sparseSA requires the sequence from
                                         //which it is built to be kept in memory
                 std::vector<long> nodes_index_; //list containing size of nodes
-                
+
         public:
                 /*
                  *        ctors
@@ -59,9 +59,8 @@ class SeedFinder{
                  *        methods
                  */
                 void addNodeToReference(std::string const &node);
-                void preprocessReference();
                 //initialise the ESSA
-                sparseSA * init_essaMEM(std::string const &meta);
+                void init_essaMEM(std::string const &meta);
                 //increase sparseness factor, should the need arise
                 void compute_sparseness();
                 //find seeds between read and the graph

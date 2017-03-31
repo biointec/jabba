@@ -72,7 +72,7 @@ GraphChain::GraphChain(int argc, char * argv[]) :
         //read graph
         graph_.set_k(settings_.get_dbg_k());
         readGraph(settings_.get_graph());
-        graph_.init_seed_finder();
+        graph_.init_seed_finder("DBGraph");
         ReadCorrectionHandler rch(graph_, settings_);
         rch.doErrorCorrection(settings_.get_libraries());
 }

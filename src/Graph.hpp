@@ -63,7 +63,9 @@ class Graph {
                 //setters
                 void set_k(int k) {k_ = k;}
                 //initialise the seed finder
-                void init_seed_finder() {seed_finder_.init();}
+                void init_seed_finder(std::string const &str) {
+                        seed_finder_.init_essaMEM(str);
+                }
                 //create a node with given sequence and neighbours
                 void addNode(std::string const &sequence,
                         std::vector<int> const &left_nb,
