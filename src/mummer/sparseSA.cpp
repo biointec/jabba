@@ -353,6 +353,8 @@ bool sparseSA::load(const string &prefix) {
 }
 
 void sparseSA::construct() {
+	cerr << "N=" << N << endl;
+	cerr << "N/K=" << N/K << endl;
 	if (K > 1) {
 		long bucketNr = 1;
 		int *intSA = new int[N/K+1];
@@ -407,11 +409,7 @@ void sparseSA::construct() {
 		int *SAint = (int*)(&SA[0]);
 		suffixsort(&ISA[0], SAint , N-1, alphalast, 1);
 	}
-
-	cerr << "N=" << N << endl;
-
 	LCP.resize(N/K);
-	cerr << "N/K=" << N/K << endl;
 	// Use algorithm by Kasai et al to construct LCP array.
 	computeLCP();	// SA + ISA -> LCP
 	LCP.init();
