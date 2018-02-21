@@ -1,0 +1,6 @@
+[submodule "brownie"]
+	path = brownie
+	url = git@github.com:/biointec/brownie.git
+[submodule "karect"]
+	path = karect
+	url = https://github.com/aminallam/karect.git
