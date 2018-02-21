@@ -1,5 +1,5 @@
 #include "ReadCorrectionHandler.hpp"
-
+#include <functional>
 void ReadCorrectionHandler::workerThread(size_t myID, LibraryContainer& libraries)
 {
         ReadCorrection readCorrection(graph_, settings_);
