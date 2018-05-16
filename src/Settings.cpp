@@ -95,9 +95,9 @@ Settings::Settings(int argc, char** args)
                         output_mode_ = SHORT;
                 } else if (arg == "-m" || arg == "--outputmode") {
                         ++i;
-                        if (args[i] == "short") {
+                        if (std::string(args[i]) == std::string("short")) {
                                 output_mode_ = SHORT;
-                        } else if (args[i] == "long") {
+                        } else if (std::string(args[i]) == std::string("long")) {
                                 output_mode_ = LONG;
                         } else {
                                 std::cerr << args[i] << " is not a valid output mode. Use \"long\" or \"short\" instead.\n";
