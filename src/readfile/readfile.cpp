@@ -117,7 +117,14 @@ void ReadFile::writeCorrectedRecord(const ReadRecord& record)
         size_t index = 1;
         if (record.correction.size() > 1) {
                 for (const auto &correction : record.correction) {
-                        auto preread = ">" + record.preRead.substr(1, record.preRead.size() - 2) + "_" + std::to_string(index) + "\n";
+                        auto preread = record.preRead.substr(1, record.preRead.size() - 2);
+                        std::string identifier;
+                        std::stringstream(preread) >> identifier;
+                        if (identifier.size() < preread.size()) {
+                                preread = ">" + identifier + "_" + std::to_string(index) + preread.substr(identifier.size()) + "\n";
+                        } else {
+                                preread = ">" + identifier + "_" + std::to_string(index) + "\n";
+                        }
                         rfHandler->writeLine(preread);
                         rfHandler->writeLine(correction);
                         rfHandler->writeLine("\n");
