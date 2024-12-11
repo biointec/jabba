@@ -1,5 +1,7 @@
 /**/*~
-build
+build*/
 bin
 Profiling
 *.kdev*
+/cmake-build-debug/
+/.idea/
