@@ -24,6 +24,7 @@
 
 #include <string>
 #include <algorithm>
+#include <cstdint>
 
 // ============================================================================
 // NUCLEOTIDE CLASS
